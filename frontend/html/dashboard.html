@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow Dashboard – Inventory and Logistics Overview">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="dashboard-page">
+
+  <div id="header-placeholder"></div>
+
+
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard-main">
+    <div class="dashboard-grid">
+
+      <!-- RECENT ORDERS -->
+      <section class="transactions-section">
+        <h2 class="section-title">Recent Orders</h2>
+        <div id="logistics-list">
+          <!-- Populated by dashboard.js -->
+        </div>
+        <p class="no-data hidden" id="logistics-no-data">No recent orders.</p>
+        <a href="logistics.html" class="view-all-link">VIEW ALL ORDERS →</a>
+      </section>
+
+      <!-- LOW STOCK ALERTS -->
+      <section class="alerts-section">
+        <h2 class="section-title">Low Stock Alert</h2>
+        <div id="alerts-list">
+          <!-- Populated by dashboard.js -->
+        </div>
+        <p class="no-data hidden" id="alerts-no-data">No low-stock items</p>
+      </section>
+
+      <!-- PENDING PERMISSIONS -->
+      <section class="alerts-section" id="permissions-section" style="display:none; grid-column: 1 / -1;">
+        <h2 class="section-title">Pending Staff Permissions</h2>
+        <div id="permissions-list">
+          <!-- Populated by dashboard.js -->
+        </div>
+        <p class="no-data hidden" id="permissions-no-data">No pending requests.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <!-- TEMPLATES -->
+
+  <!-- Alert Card Template -->
+  <template id="alert-tpl">
+    <div class="alert-card">
+      <div class="alert-card-top">
+        <h3 class="alert-product" data-alert-name></h3>
+      </div>
+      <div class="alert-card-bottom">
+        <div class="alert-stock" data-alert-stock></div>
+        <a href="#" class="order-btn" data-alert-link>Order More</a>
+      </div>
+    </div>
+  </template>
+
+  <!-- Recent Logistics Template -->
+  <template id="logistics-item-tpl">
+    <div class="transaction-item">
+      <div class="txn-info">
+        <div class="txn-name" data-log-name></div>
+        <div class="txn-location" data-log-location></div>
+      </div>
+      <div class="txn-right">
+        <span class="status-badge" data-log-badge></span>
+      </div>
+    </div>
+  </template>
+
+  <!-- Permission Item Template -->
+  <template id="permission-item-tpl">
+    <div class="transaction-item">
+      <div class="txn-info">
+        <div class="txn-name" data-perm-name></div>
+        <div class="txn-location" style="font-size: 11px; color:#6b7280;" data-perm-username></div>
+      </div>
+      <div class="txn-right" style="display: flex; gap: 8px;">
+        <button class="confirm-btn" data-perm-approve style="padding: 5px 10px; font-size: 11px;">Approve</button>
+        <button class="delete-btn" data-perm-reject style="padding: 5px 10px; font-size: 11px; margin: 0;">Reject</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Search Result Group Label Template -->
+  <template id="search-group-tpl">
+    <div class="search-group-label" data-group-name></div>
+  </template>
+
+  <!-- Search Result Item Template -->
+  <template id="search-item-tpl">
+    <div class="search-result-item" data-search-link>
+      <div class="search-result-main">
+        <span class="search-result-name" data-search-name></span>
+        <span class="search-result-meta" data-search-meta></span>
+      </div>
+      <span class="search-result-badge" data-search-badge></span>
+    </div>
+  </template>
+
+  <template id="search-no-results-tpl">
+    <div class="search-no-results" data-no-results></div>
+  </template>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/dashboard.js"></script>
+
+</body>
+
+</html>
