@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Inventory – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Product Inventory Management">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="page-header-row">
+      <h1 class="page-title">Product Inventory</h1>
+      <a href="add_product.html" class="confirm-btn" id="add-product-btn">+ ADD PRODUCT</a>
+    </div>
+
+    <!-- Search -->
+    <div class="prod-search-wrap">
+      <span class="prod-search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </span>
+      <input type="text" id="prod-search" class="prod-search-input" placeholder="Search products…">
+    </div>
+
+    <!-- Table -->
+    <div class="prod-table-wrap">
+      <table class="prod-table">
+        <thead>
+          <tr>
+            <th>Product Details</th>
+            <th>Category</th>
+            <th>Stock Level</th>
+            <th>Price</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="prod-tbody">
+          <tr>
+            <td colspan="5" class="no-data">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Product row template -->
+    <template id="prod-row-tpl">
+      <tr>
+        <td>
+          <div class="prod-details-cell">
+            <div class="prod-img-placeholder">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+            <div>
+              <div class="prod-name" data-name></div>
+              <div class="prod-sku" data-sku></div>
+            </div>
+          </div>
+        </td>
+        <td data-category></td>
+        <td data-stock></td>
+        <td data-price></td>
+        <td class="text-center">
+          <div class="tbl-actions">
+            <button class="pag-btn btn-edit" data-view-btn>View</button>
+            <button class="pag-btn btn-edit" data-edit-btn>Edit</button>
+            <button class="pag-btn btn-edit" data-update-btn>Update</button>
+            <button class="delete-btn btn-sm" data-delete-btn>Delete</button>
+          </div>
+        </td>
+      </tr>
+    </template>
+
+    <!-- View body template -->
+    <template id="view-body-tpl">
+      <div class="view-grid">
+        <div class="view-item"><span class="view-label">Name</span> <span class="view-val" data-vname></span></div>
+        <div class="view-item"><span class="view-label">Category</span> <span class="view-val" data-vcategory></span>
+        </div>
+        <div class="view-item"><span class="view-label">Stock</span> <span class="view-val" data-vstock></span></div>
+        <div class="view-item"><span class="view-label">Selling Price</span> <span class="view-val" data-vprice></span>
+        </div>
+        <div class="view-item"><span class="view-label">Cost Price</span> <span class="view-val" data-vcost></span>
+        </div>
+        <div class="view-item"><span class="view-label">Supplier</span> <span class="view-val" data-vsupplier></span>
+        </div>
+        <div class="view-item view-item-full"><span class="view-label">Storage</span><span class="view-val"
+            data-vstorage></span></div>
+      </div>
+    </template>
+
+  </main>
+
+  <!-- VIEW Modal -->
+  <div class="modal-overlay" id="view-modal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Product Details</h3>
+        <button class="modal-close" onclick="closeModal('view-modal')">&#10005;</button>
+      </div>
+      <div id="view-modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- EDIT Modal -->
+  <div class="modal-overlay" id="edit-modal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Product</h3>
+        <button class="modal-close" onclick="closeModal('edit-modal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-form" novalidate>
+          <input type="hidden" id="edit-id">
+          <div class="edit-row">
+            <div class="edit-col">
+              <label class="ap-label" for="edit-name">NAME</label>
+              <input class="ap-input" type="text" id="edit-name" required>
+            </div>
+            <div class="edit-col">
+              <label class="ap-label" for="edit-category">CATEGORY</label>
+              <select class="ap-input ap-select" id="edit-category">
+                <option>Produce</option>
+                <option>Dairy</option>
+                <option>Bakery</option>
+                <option>Meat</option>
+                <option>Beverage</option>
+                <option>Frozen</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-row">
+            <div class="edit-col">
+              <label class="ap-label" for="edit-stock">STOCK</label>
+              <input class="ap-input" type="number" id="edit-stock" required min="0">
+            </div>
+            <div class="edit-col">
+              <label class="ap-label" for="edit-price">SELLING PRICE</label>
+              <input class="ap-input" type="number" step="0.01" id="edit-price" required>
+            </div>
+          </div>
+          <div class="edit-row">
+            <div class="edit-col">
+              <label class="ap-label" for="edit-cost">COST PRICE</label>
+              <input class="ap-input" type="number" step="0.01" id="edit-cost">
+            </div>
+            <div class="edit-col">
+              <label class="ap-label" for="edit-supplier">SUPPLIER</label>
+              <input class="ap-input" type="text" id="edit-supplier">
+            </div>
+          </div>
+          <div class="edit-row">
+            <div class="edit-col edit-col-full">
+              <label class="ap-label" for="edit-storage">STORAGE INSTRUCTIONS</label>
+              <textarea class="ap-input ap-textarea" id="edit-storage"></textarea>
+            </div>
+          </div>
+          <p id="edit-msg" class="form-message" style="display:none;"></p>
+          <div class="modal-footer">
+            <button type="button" class="pag-btn" onclick="closeModal('edit-modal')">Cancel</button>
+            <button type="submit" class="confirm-btn" id="edit-submit">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPDATE STOCK Modal -->
+  <div class="modal-overlay" id="update-modal" style="display:none;">
+    <div class="modal-box modal-box-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Stock</h3>
+        <button class="modal-close" onclick="closeModal('update-modal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <form id="update-form" novalidate>
+          <input type="hidden" id="update-id">
+          <p id="update-product-name" class="update-product-name"></p>
+          <label class="ap-label" for="update-stock">NEW STOCK QUANTITY</label>
+          <input class="ap-input" type="number" id="update-stock" required min="0">
+          <p id="update-msg" class="form-message" style="display:none;"></p>
+          <div class="modal-footer">
+            <button type="button" class="pag-btn" onclick="closeModal('update-modal')">Cancel</button>
+            <button type="submit" class="confirm-btn">Update Stock</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION Modal -->
+  <div class="modal-overlay" id="delete-modal" style="display:none;">
+    <div class="modal-box modal-box-delete">
+      <div class="delete-icon-wrapper">
+        <svg viewBox="0 0 24 24" class="delete-alert-icon">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="delete-modal-title">Delete Confirmation</h3>
+      <p class="delete-modal-subtitle">Are you sure you want to delete this product?</p>
+
+      <div class="delete-modal-actions">
+        <button class="delete-confirm-btn" id="confirm-delete-btn">DELETE</button>
+        <button class="delete-cancel-btn" onclick="closeModal('delete-modal')">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REJECTION NOTIFICATION Modal -->
+  <div class="modal-overlay" id="rejection-modal" style="display:none; z-index: 9999;">
+    <div class="modal-box modal-box-delete">
+      <div class="delete-icon-wrapper" style="background-color: #fee2e2;">
+        <svg viewBox="0 0 24 24" class="delete-alert-icon" style="stroke: #ef4444;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <h3 class="delete-modal-title">Product Rejected</h3>
+      <p class="delete-modal-subtitle" id="rejection-message">Admin declined your request to add product.</p>
+
+      <div class="delete-modal-actions" style="justify-content: center;">
+        <button class="confirm-btn" id="ack-rejection-btn" style="width:100%;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/products.js"></script>
+
+</body>
+
+</html>
