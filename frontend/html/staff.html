@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Directory – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Manage staff members">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="page-header-row">
+      <h1 class="page-title">Staff Directory</h1>
+      <a href="add_staff.html" class="confirm-btn">+ ADD STAFF</a>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="prod-table-wrap">
+      <table class="prod-table staff-table" id="staff-table">
+        <thead>
+          <tr>
+            <th>Staff Member</th>
+            <th>Role</th>
+            <th>Phone No.</th>
+            <th class="admin-only">Password</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="staff-tbody">
+          <tr><td colspan="5" class="no-data">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Row template: JS clones this – text values only, no markup in JS -->
+    <template id="staff-row-tpl">
+      <tr>
+        <td>
+          <div class="staff-member-cell">
+            <div class="staff-avatar" data-avatar></div>
+            <div>
+              <div class="staff-name" data-name></div>
+              <div class="staff-id" data-stf-id></div>
+            </div>
+          </div>
+        </td>
+        <td class="staff-role" data-role></td>
+        <td class="staff-phone" data-phone></td>
+        <td class="staff-password-cell">
+          <div class="pw-wrap">
+            <span class="pw-text" data-pw></span>
+            <button type="button" class="pw-eye" data-eye aria-label="Toggle password visibility">
+              <!-- closed eye (default) -->
+              <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+              <!-- open eye -->
+              <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+        <td>
+          <div class="tbl-actions">
+            <button class="pag-btn btn-edit" data-edit-btn>Edit</button>
+            <button class="delete-btn btn-sm" data-delete-btn>Delete</button>
+          </div>
+        </td>
+      </tr>
+    </template>
+
+    <!-- EDIT Modal -->
+    <div class="modal-overlay" id="edit-modal" style="display:none;">
+      <div class="modal-box modal-box-sm">
+        <div class="modal-header">
+          <h3 class="modal-title">Edit Staff Member</h3>
+          <button class="modal-close" onclick="closeModal('edit-modal')">&#10005;</button>
+        </div>
+        <div class="modal-body">
+          <form id="edit-form" novalidate>
+            <input type="hidden" id="edit-id">
+
+            <div class="form-group">
+              <label class="ap-label" for="edit-name">FULL NAME</label>
+              <input class="ap-input" type="text" id="edit-name" required>
+            </div>
+
+            <div class="form-group">
+              <label class="ap-label" for="edit-username">USERNAME</label>
+              <input class="ap-input" type="text" id="edit-username" required>
+            </div>
+
+            <div class="form-group">
+              <label class="ap-label" for="edit-phone">PHONE NO.</label>
+              <input class="ap-input" type="tel" id="edit-phone" pattern="[0-9]{10}" maxlength="10" required>
+            </div>
+
+            <div class="form-group">
+              <label class="ap-label" for="edit-role">ROLE</label>
+              <select class="ap-input ap-select" id="edit-role">
+                <option>Floor Staff</option>
+                <option>Inventory Manager</option>
+                <option>Senior Cashier</option>
+                <option>Logistics Coordinator</option>
+                <option>Supervisor</option>
+              </select>
+            </div>
+
+            <div class="form-group admin-only" id="edit-password-group">
+              <label class="ap-label" for="edit-password">NEW PASSWORD <span style="font-weight:400;text-transform:none;font-size:0.75rem;color:#9ca3af">(leave blank to keep current)</span></label>
+              <div class="pw-input-wrap">
+                <input class="ap-input" type="password" id="edit-password" autocomplete="new-password" placeholder="Enter new password…">
+                <button type="button" class="pw-eye pw-eye-input" id="edit-pw-toggle" aria-label="Show/hide password">
+                  <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                  <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <p id="edit-msg" class="form-message" style="display:none;"></p>
+
+            <div class="modal-footer">
+              <button type="button" class="pag-btn" onclick="closeModal('edit-modal')">Cancel</button>
+              <button type="submit" class="confirm-btn" id="edit-submit">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/staff.js"></script>
+
+</body>
+</html>

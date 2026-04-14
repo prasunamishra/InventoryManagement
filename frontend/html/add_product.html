@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Add a new product to inventory">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="form-card">
+      <h1 class="page-title">Add New Product</h1>
+
+      <form id="add-product-form" novalidate>
+        <div class="ap-grid">
+          <div>
+            <label class="ap-label" for="ap-name">PRODUCT NAME</label>
+            <input class="ap-input" type="text" id="ap-name" required placeholder="e.g., Organic Milk">
+          </div>
+          <div>
+            <label class="ap-label" for="ap-category">CATEGORY</label>
+            <select class="ap-input ap-select" id="ap-category">
+              <option>Dairy</option>
+              <option>Produce</option>
+              <option>Bakery</option>
+              <option>Meat</option>
+              <option>Beverage</option>
+              <option>Frozen</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="ap-label" for="ap-stock">INITIAL STOCK</label>
+            <input class="ap-input" type="number" id="ap-stock" required value="0" min="0">
+          </div>
+          <div>
+            <label class="ap-label" for="ap-price">SELLING PRICE (RS)</label>
+            <input class="ap-input" type="number" step="0.01" id="ap-price" required placeholder="0.00">
+          </div>
+          <div>
+            <label class="ap-label" for="ap-cost">COST PRICE (RS)</label>
+            <input class="ap-input" type="number" step="0.01" id="ap-cost" placeholder="0.00">
+          </div>
+          <div>
+            <label class="ap-label" for="ap-supplier">SUPPLIER (Optional)</label>
+            <input class="ap-input" type="text" id="ap-supplier" placeholder="Vendor Name">
+          </div>
+          <div class="ap-grid-full">
+            <label class="ap-label" for="ap-storage">STORAGE LOCATION (Optional)</label>
+            <input class="ap-input" type="text" id="ap-storage" placeholder="e.g. Kathmandu, nepal">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <p id="ap-message" class="form-message" hidden></p>
+          <button type="submit" class="confirm-btn" id="ap-submit">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/add_product.js"></script>
+</body>
+
+</html>

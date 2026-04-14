@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Staff – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Add a new staff member">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <h1 class="page-title staff-page-title">Registration</h1>
+
+    <div class="form-card staff-form-card">
+
+      <form id="staffForm" novalidate>
+
+        <div class="form-group staff-form-group">
+          <label class="ap-label staff-label" for="stf-name">FULL NAME</label>
+          <input class="ap-input staff-input" type="text" id="stf-name" required placeholder="e.g. Alexander Pierce">
+        </div>
+
+        <div class="staff-form-row">
+          <div class="form-group staff-form-col">
+            <label class="ap-label" for="stf-username">USERNAME</label>
+            <input class="ap-input" type="text" id="stf-username" required placeholder="apierce_ops" autocomplete="off">
+          </div>
+          <div class="form-group staff-form-col-relative">
+            <label class="ap-label" for="stf-password">PASSWORD</label>
+            <input class="ap-input" type="password" id="stf-password" required placeholder="••••••••"
+              autocomplete="new-password">
+          </div>
+        </div>
+
+        <div class="form-group staff-form-group-md">
+          <label class="ap-label staff-label" for="stf-phone">PHONE NO.</label>
+          <input class="ap-input staff-input" type="tel" id="stf-phone" required pattern="[0-9]{10}" maxlength="10"
+            placeholder="10-digit number">
+        </div>
+
+        <div class="form-group form-group-xl">
+          <label class="ap-label">ROLE</label>
+          <input type="hidden" id="stf-role" value="Inventory Manager">
+          <div class="role-selector">
+            <button type="button" class="role-btn role-active" data-value="Inventory Manager">Inventory Manager</button>
+            <button type="button" class="role-btn" data-value="Floor Staff">Floor Staff</button>
+            <button type="button" class="role-btn" data-value="Logistics Coordinator">Logistics Coordinator</button>
+            <button type="button" class="role-btn" data-value="Supervisor">Supervisor</button>
+          </div>
+        </div>
+
+        <div class="form-actions staff-form-actions">
+          <p id="stf-message" class="form-message stf-message-hidden"></p>
+          <button type="submit" class="confirm-btn stf-submit-btn" id="stf-submit">Add Staff</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/add_staff.js"></script>
+</body>
+
+</html>
