@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Logistics Order – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Create a new logistics delivery order">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+  <div id="header-placeholder"></div>
+
+  <main class="add-product-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="form-card">
+      <h1 class="page-title">Create Logistics Order</h1>
+
+      <form id="create-order-form" novalidate>
+
+        <div class="co-section-label">CUSTOMER DETAILS</div>
+
+        <div class="co-field">
+          <label class="ap-label" for="co-customer">Customer Name</label>
+          <input class="ap-input co-input" type="text" id="co-customer"
+            placeholder="Enter legal identity or individual name" required>
+        </div>
+
+        <div class="co-field">
+          <label class="ap-label" for="co-address">Delivery Address</label>
+          <textarea class="ap-input co-textarea" id="co-address" placeholder="" required></textarea>
+        </div>
+
+        <div class="co-row">
+          <div class="co-col">
+            <label class="ap-label" for="co-product">Grocery Item Selection</label>
+            <select class="ap-input ap-select co-input" id="co-product" required>
+              <option value="" disabled selected>Select inventory category</option>
+              <option>Dairy</option>
+              <option>Produce</option>
+              <option>Bakery</option>
+              <option>Meat</option>
+              <option>Beverage</option>
+              <option>Frozen</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="co-qty-col">
+            <label class="ap-label" for="co-qty">Quantity</label>
+            <div class="co-qty-wrap">
+              <input class="ap-input co-input co-qty-input" type="number" id="co-qty" value="0" min="0">
+              <span class="co-unit-label">UNITS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-field">
+          <label class="ap-label" for="co-status">Delivery Status</label>
+          <select class="ap-input ap-select co-input" id="co-status">
+            <option>Pending</option>
+            <option>In Transit</option>
+            <option>Shipped</option>
+            <option>Delivered</option>
+            <option>Delayed</option>
+          </select>
+        </div>
+
+        <p id="co-msg" class="form-message" hidden></p>
+
+        <div class="co-submit-row">
+          <button type="submit" class="co-submit-btn" id="co-submit">
+            Create Logistics Order
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/create_order.js"></script>
+</body>
+
+</html>
