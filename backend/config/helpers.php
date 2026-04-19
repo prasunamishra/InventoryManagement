@@ -33,3 +33,4 @@ function requireMethod($method) {
         sendResponse(['success' => false, 'message' => 'Method not allowed.'], 405);
     }
 }
+        
