@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – GroceryFlow</title>
+  <meta name="description" content="Sign in to GroceryFlow – Internal Inventory & Logistics Management System">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="login-page">
+
+  <div class="login-wrapper">
+    <div class="login-card">
+
+      <div class="login-logo">
+        <span class="login-logo-icon">🛒</span>
+        GroceryFlow
+      </div>
+      <p class="login-subtitle">Inventory Management System</p>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="username">USERNAME</label>
+          <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username"
+            autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">PASSWORD</label>
+          <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password"
+            autocomplete="current-password" required>
+        </div>
+
+        <div class="form-options" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+          <input type="checkbox" id="remember" name="remember"
+            style="accent-color: #0d9488; width: 16px; height: 16px; cursor: pointer;">
+          <label for="remember" style="font-size: 14px; color: #4b5563; cursor: pointer; user-select: none;">Remember
+            me</label>
+        </div>
+
+        <p id="login-error" class="login-error" style="display:none;"></p>
+
+        <button type="submit" id="login-submit" class="login-btn">LOG IN</button>
+      </form>
+    </div>
+
+    <p class="login-footer-text">© 2026 GroceryFlow – Inventory & Logistics</p>
+  </div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+</body>
+
+</html>
