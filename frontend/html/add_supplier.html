@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add New Supplier – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Add a new supplier">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+  <div id="header-placeholder"></div>
+
+  <main class="add-product-main">
+
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="form-card">
+      <h1 class="page-title">Add New Supplier</h1>
+
+      <form id="add-supplier-form" novalidate>
+
+        <div class="co-field">
+          <label class="ap-label" for="sup-name">SUPPLIER NAME</label>
+          <input class="ap-input co-input" type="text" id="sup-name" placeholder="e.g. Global Harvest Co." required>
+        </div>
+
+        <div class="co-row">
+          <div class="co-col">
+            <label class="ap-label" for="sup-phone">NUMBER (PHONE)</label>
+            <input class="ap-input co-input" type="tel" id="sup-phone" placeholder="10-digit number" required pattern="[0-9]{10}" maxlength="10">
+          </div>
+          <div class="co-col">
+            <label class="ap-label" for="sup-email">EMAIL</label>
+            <input class="ap-input co-input" type="email" id="sup-email" placeholder="contact@supplier.com" required>
+          </div>
+        </div>
+
+        <p id="sup-msg" class="form-message" hidden></p>
+
+        <div class="modal-footer" style="margin-top: 28px; justify-content: flex-end;">
+          <button type="submit" class="confirm-btn" id="sup-submit">Add Supplier</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/add_supplier.js"></script>
+</body>
+
+</html>

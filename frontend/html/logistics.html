@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logistics – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Manage logistics and delivery orders">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="inner-page">
+
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+
+    <!-- Previous Button -->
+    <button onclick="window.history.back()" class="confirm-btn back-btn">
+      ← Previous
+    </button>
+
+    <div class="page-header-row logistics-header-row">
+      <h1 class="page-title logistics-page-title">Logistics Command</h1>
+      <a href="create_order.html" class="confirm-btn">+ CREATE ORDER</a>
+    </div>
+
+    <!-- Active Deliveries Box -->
+    <div class="active-deliv-card active-deliv-card-spaced">
+      <div class="active-deliv-label">ACTIVE DELIVERIES</div>
+      <div class="active-deliv-value" id="active-deliv-count">0</div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="prod-table-wrap">
+      <table class="prod-table" id="logistics-table">
+        <thead>
+          <tr>
+            <th>Customer Name</th>
+            <th>Address</th>
+            <th>Product</th>
+            <th>Delivery Status</th>
+          </tr>
+        </thead>
+        <tbody id="logistics-tbody">
+          <tr><td colspan="4" class="no-data">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Row template -->
+    <template id="logistics-row-tpl">
+      <tr>
+        <td data-logi-customer></td>
+        <td data-logi-address></td>
+        <td>
+          <span class="product-grey-pill" data-logi-product></span>
+        </td>
+        <td>
+          <div class="status-pill-wrap" data-logi-status-wrap>
+            <span class="status-dot"></span>
+            <select data-logi-status-select style="background: transparent; border: none; font-weight: 700; font-size: 12px; outline: none; color: inherit; cursor: pointer; box-shadow: none;">
+              <option value="Pending">Pending</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Delayed">Delayed</option>
+            </select>
+          </div>
+        </td>
+      </tr>
+    </template>
+
+    <!-- ADD ORDER MODAL -->
+    <div class="modal-overlay" id="add-order-modal" style="display:none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 class="modal-title">Create Order</h3>
+          <button class="modal-close" onclick="closeModal('add-order-modal')">&#10005;</button>
+        </div>
+        <div class="modal-body">
+          <form id="logisticsForm">
+            <div class="form-row">
+              <div class="form-col">
+                <label class="ap-label" for="log-customer">CUSTOMER</label>
+                <input class="ap-input" type="text" id="log-customer" placeholder="Customer name" required>
+              </div>
+              <div class="form-col">
+                <label class="ap-label" for="log-address">ADDRESS</label>
+                <input class="ap-input" type="text" id="log-address" placeholder="Delivery address" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-col">
+                <label class="ap-label" for="log-product">PRODUCT</label>
+                <input class="ap-input" type="text" id="log-product" placeholder="e.g. Whole Milk x2" required>
+              </div>
+              <div class="form-col">
+                <label class="ap-label" for="log-status">STATUS</label>
+                <select class="ap-input ap-select" id="log-status">
+                  <option>Pending</option>
+                  <option>In Transit</option>
+                  <option>Shipped</option>
+                  <option>Delivered</option>
+                  <option>Delayed</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="confirm-btn">ADD ORDER</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+  <script src="../js/logistics.js"></script>
+
+</body>
+</html>
