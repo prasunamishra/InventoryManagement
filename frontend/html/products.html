@@ -24,16 +24,22 @@
       <a href="add_product.html" class="confirm-btn" id="add-product-btn">+ ADD PRODUCT</a>
     </div>
 
-    <!-- Search -->
-    <div class="prod-search-wrap">
-      <span class="prod-search-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </span>
-      <input type="text" id="prod-search" class="prod-search-input" placeholder="Search products…">
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+      <!-- Search -->
+      <div class="prod-search-wrap" style="flex: 1; margin-bottom: 0;">
+        <span class="prod-search-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </span>
+        <input type="text" id="prod-search" class="prod-search-input" placeholder="Search products…">
+      </div>
+      <label style="font-size: 14px; color: #4b5563; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="show-inactive-toggle">
+        Show Inactive Items
+      </label>
     </div>
 
     <!-- Table -->
@@ -82,7 +88,7 @@
             <button class="pag-btn btn-edit" data-view-btn>View</button>
             <button class="pag-btn btn-edit" data-edit-btn>Edit</button>
             <button class="pag-btn btn-edit" data-update-btn>Update</button>
-            <button class="delete-btn btn-sm" data-delete-btn>Delete</button>
+            <button class="delete-btn btn-sm" data-status-toggle style="margin-left: 5px;">Deactivate</button>
           </div>
         </td>
       </tr>
@@ -164,7 +170,9 @@
             </div>
             <div class="edit-col">
               <label class="ap-label" for="edit-supplier">SUPPLIER</label>
-              <input class="ap-input" type="text" id="edit-supplier">
+              <select class="ap-input ap-select" id="edit-supplier" required>
+                <option value="">Loading suppliers...</option>
+              </select>
             </div>
           </div>
           <div class="edit-row">
@@ -206,22 +214,21 @@
     </div>
   </div>
 
-  <!-- DELETE CONFIRMATION Modal -->
-  <div class="modal-overlay" id="delete-modal" style="display:none;">
-    <div class="modal-box modal-box-delete">
-      <div class="delete-icon-wrapper">
-        <svg viewBox="0 0 24 24" class="delete-alert-icon">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
-      </div>
-      <h3 class="delete-modal-title">Delete Confirmation</h3>
-      <p class="delete-modal-subtitle">Are you sure you want to delete this product?</p>
+  <!-- DELETE CONFIRMATION Modal Removed -->
 
-      <div class="delete-modal-actions">
-        <button class="delete-confirm-btn" id="confirm-delete-btn">DELETE</button>
-        <button class="delete-cancel-btn" onclick="closeModal('delete-modal')">CANCEL</button>
+  <!-- STATUS CONFIRMATION Modal -->
+  <div class="modal-overlay" id="status-modal" style="display:none; z-index: 9999;">
+    <div class="modal-box modal-box-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirm Status Change</h3>
+        <button class="modal-close" onclick="closeModal('status-modal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <p id="status-confirm-msg" style="font-size: 14px; margin-bottom: 20px;">Are you sure you want to mark this item as Inactive? It will be hidden from inventory.</p>
+        <div class="modal-footer">
+          <button type="button" class="pag-btn" onclick="closeModal('status-modal')">Cancel</button>
+          <button type="button" class="confirm-btn" id="confirm-status-btn" style="background: #ef4444;">Yes, Proceed</button>
+        </div>
       </div>
     </div>
   </div>
