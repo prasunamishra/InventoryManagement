@@ -14,7 +14,13 @@ switch ($method) {
         sendResponse(createProduct(getJsonBody()));
         break;
     case 'PUT':
-        sendResponse(updateProduct(getJsonBody()));
+        if (isset($_GET['action']) && $_GET['action'] === 'restock') {
+            sendResponse(restockProduct(getJsonBody()));
+        } elseif (isset($_GET['action']) && $_GET['action'] === 'status') {
+            sendResponse(updateProductStatus(getJsonBody()));
+        } else {
+            sendResponse(updateProduct(getJsonBody()));
+        }
         break;
     case 'DELETE':
         sendResponse(deleteProduct(getJsonBody()));
