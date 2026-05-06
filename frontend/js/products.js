@@ -1,14 +1,14 @@
 let allProducts = [];
 let filteredProducts = [];
-let productToDeleteId = null;
-
+let showInactive = false;
+let statusTargetId = null;
+let statusTargetStatus = null;
 // ─── Fetch products from API ──────────────────────────────────────────────
 async function fetchProducts() {
   const data = await apiCall(`${window.env.API_URL}/api/products.php`);
   if (data && data.success !== false) {
     allProducts = data.products || [];
-    filteredProducts = [...allProducts];
-    renderTable();
+    applyFilters();
     checkRejections(data.rejectedItems || []);
   } else {
     console.error('Products load error:', data?.message);
@@ -86,34 +86,57 @@ function renderTable() {
     row.querySelector('[data-update-btn]').addEventListener('click', () => openUpdate(p.id, p.name, p.stock));
 
     const editBtn = row.querySelector('[data-edit-btn]');
-    const deleteBtn = row.querySelector('[data-delete-btn]');
+    const statusBtn = row.querySelector('[data-status-toggle]');
+    const trEl = row.querySelector('tr');
+    
+    if (trEl && p.status === 'inactive') {
+      trEl.style.opacity = '0.6';
+      trEl.style.background = '#f3f4f6';
+    }
     
     // Everyone can edit
     editBtn.addEventListener('click', () => openEdit(p));
     
-    // Only Admin/Supervisor can delete directly
-    if (isAdmin) {
-      deleteBtn.addEventListener('click', () => promptDelete(p.id, p.name));
-    } else {
-      deleteBtn.style.display = 'none';
+    // Everyone can change status
+    if (statusBtn) {
+      if (p.status === 'inactive') {
+        statusBtn.textContent = 'Activate';
+        statusBtn.style.background = '#10b981';
+        statusBtn.style.color = 'white';
+      } else {
+        statusBtn.textContent = 'Deactivate';
+        statusBtn.style.background = '#fee2e2';
+        statusBtn.style.color = '#dc2626';
+      }
+      statusBtn.addEventListener('click', () => openStatusModal(p));
     }
 
     tbody.appendChild(row);
   });
 }
 
-// ─── Search filter ────────────────────────────────────────────────────────
-document.getElementById('prod-search').addEventListener('input', function () {
-  const q = this.value.trim().toLowerCase();
-  filteredProducts = q
-    ? allProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      (p.supplier && p.supplier.toLowerCase().includes(q))
-    )
-    : [...allProducts];
+// ─── Apply Filters ────────────────────────────────────────────────────────
+function applyFilters() {
+  const q = document.getElementById('prod-search').value.trim().toLowerCase();
+  filteredProducts = allProducts.filter(p => {
+    if (!showInactive && p.status === 'inactive') return false;
+    
+    if (q) {
+      return p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.supplier && p.supplier.toLowerCase().includes(q));
+    }
+    return true;
+  });
   renderTable();
+}
+
+// ─── Search & Toggle filter ───────────────────────────────────────────────
+document.getElementById('prod-search').addEventListener('input', applyFilters);
+document.getElementById('show-inactive-toggle')?.addEventListener('change', function (e) {
+  showInactive = e.target.checked;
+  applyFilters();
 });
 
 // ─── Modal helpers ────────────────────────────────────────────────────────
@@ -227,31 +250,48 @@ document.getElementById('update-form').addEventListener('submit', async function
   }
 });
 
-// ─── Delete ───────────────────────────────────────────────────────────────
-function promptDelete(id, name) {
-  productToDeleteId = id;
-  openModal('delete-modal');
+// ─── Update Status Modal ──────────────────────────────────────────────────
+function openStatusModal(p) {
+  statusTargetId = p.id;
+  statusTargetStatus = (p.status === 'inactive') ? 'active' : 'inactive';
+  
+  const msgEl = document.getElementById('status-confirm-msg');
+  const btnEl = document.getElementById('confirm-status-btn');
+  
+  if (statusTargetStatus === 'inactive') {
+    msgEl.textContent = `Are you sure you want to mark ${p.name} as Inactive? It will be hidden from inventory.`;
+    btnEl.textContent = 'Yes, Deactivate';
+    btnEl.style.background = '#ef4444';
+  } else {
+    msgEl.textContent = `Are you sure you want to mark ${p.name} as Active?`;
+    btnEl.textContent = 'Yes, Activate';
+    btnEl.style.background = '#10b981';
+  }
+  
+  openModal('status-modal');
 }
 
-document.getElementById('confirm-delete-btn').addEventListener('click', async function () {
-  if (!productToDeleteId) return;
+document.getElementById('confirm-status-btn')?.addEventListener('click', async function() {
+  if (!statusTargetId || !statusTargetStatus) return;
   const btn = this;
-  btn.disabled = true; btn.textContent = 'DELETING...';
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Updating...';
 
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
-    method: 'DELETE',
-    body: { id: productToDeleteId }
+  const data = await apiCall(`${window.env.API_URL}/api/products.php?action=status`, {
+    method: 'PUT',
+    body: { id: statusTargetId, status: statusTargetStatus }
   });
 
   if (data.success) {
     await fetchProducts();
-    closeModal('delete-modal');
+    closeModal('status-modal');
   } else {
-    alert(data.message || 'Error deleting product.');
+    alert(data.message || 'Error updating product status.');
   }
-
-  btn.disabled = false; btn.textContent = 'DELETE';
-  productToDeleteId = null;
+  
+  btn.disabled = false;
+  btn.textContent = originalText;
 });
 
 // ─── Utility ──────────────────────────────────────────────────────────────
@@ -300,5 +340,50 @@ document.getElementById('ack-rejection-btn')?.addEventListener('click', async fu
 });
 
 
+// ─── Load Suppliers for Edit Modal ──────────────────────────────────────────
+async function loadSuppliers() {
+  const supplierSelect = document.getElementById('edit-supplier');
+  if (!supplierSelect) return;
+
+  const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`);
+  if (data && data.success !== false) {
+    const suppliers = data.suppliers || [];
+    supplierSelect.replaceChildren();
+    
+    const defaultOption = document.createElement('option');
+    defaultOption.value = "";
+    defaultOption.textContent = "Select a Supplier";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    supplierSelect.appendChild(defaultOption);
+
+    suppliers.forEach(s => {
+      const option = document.createElement('option');
+      option.value = s.name;
+      option.textContent = s.name;
+      supplierSelect.appendChild(option);
+    });
+  } else {
+    supplierSelect.innerHTML = '<option value="">Error loading suppliers</option>';
+  }
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', fetchProducts);
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSuppliers();
+  await fetchProducts();
+
+  // Check for auto-open Update Stock modal (from AI Chatbot)
+  const urlParams = new URLSearchParams(window.location.search);
+  const updateId = urlParams.get('update_stock_id');
+  const qty = urlParams.get('qty');
+  if (updateId && qty) {
+    const id = parseInt(updateId);
+    const prod = allProducts.find(p => p.id === id);
+    if (prod) {
+      // Clear URL params to prevent re-opening on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+      openUpdate(id, prod.name, qty);
+    }
+  }
+});
