@@ -1,348 +1,11 @@
-let allProducts = [];
-let filteredProducts = [];
-let showInactive = false;
-let statusTargetId = null;
-let statusTargetStatus = null;
-// ─── Fetch products from API ──────────────────────────────────────────────
-async function fetchProducts() {
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`);
-  if (data && data.success !== false) {
-    allProducts = data.products || [];
-    applyFilters();
-    checkRejections(data.rejectedItems || []);
-  } else {
-    console.error('Products load error:', data?.message);
-    const tbody = document.getElementById('prod-tbody');
-    tbody.replaceChildren();
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = 5;
-    td.className = 'no-data';
-    td.textContent = 'Error loading products.';
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  }
-}
+/**
+ * add_product.js – Add new product form logic
+ * BUG FIX: was listening to '#addProductForm' but HTML id is 'add-product-form'
+ */
 
-// ─── Render table using <template> ────────────────────────────────────────
-function renderTable() {
-  const tbody = document.getElementById('prod-tbody');
-  const tpl = document.getElementById('prod-row-tpl');
-  const role = (sessionStorage.getItem('gf_role') || 'admin').trim().toLowerCase();
-  const jobRole = (sessionStorage.getItem('gf_job_role') || '').trim().toLowerCase();
-
-  const isAdmin = role !== 'staff' || jobRole === 'supervisor';
-
-  // Everyone can add products (staff additions go to pending)
-  const addBtn = document.getElementById('add-product-btn');
-  if (addBtn) addBtn.style.display = '';
-
-  tbody.replaceChildren();
-
-  if (filteredProducts.length === 0) {
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = 5;
-    td.className = 'no-data';
-    td.textContent = 'No products found.';
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-    return;
-  }
-
-  filteredProducts.forEach(p => {
-    // Clone the row template defined in products.html
-    const row = tpl.content.cloneNode(true);
-
-    // Product name & SKU
-    row.querySelector('[data-name]').textContent = p.name;
-    row.querySelector('[data-sku]').textContent = 'SKU: ' + p.sku;
-
-    // Category badge — set class and text, colour applied via style
-    const catCell = row.querySelector('[data-category]');
-    const badge = document.createElement('span');
-    badge.textContent = p.category;
-    const catClass = 'cat-' + (p.category || 'other').toLowerCase();
-    badge.className = `cat-badge ${catClass}`;
-    catCell.appendChild(badge);
-
-    // Stock — apply low/ok class, no HTML string needed
-    const stockCell = row.querySelector('[data-stock]');
-    const stockSpan = document.createElement('span');
-    stockSpan.textContent = p.stock + ' Units';
-    stockSpan.className = p.stock < 10 ? 'stock-low' : 'stock-ok';
-    stockCell.appendChild(stockSpan);
-
-    // Price
-    const priceTd = row.querySelector('[data-price]');
-    priceTd.className = 'prod-price';
-    priceTd.textContent = 'Rs. ';
-    const priceSpan = document.createElement('span');
-    priceSpan.textContent = parseFloat(p.price).toFixed(0);
-    priceTd.appendChild(priceSpan);
-
-    // Buttons
-    row.querySelector('[data-view-btn]').addEventListener('click', () => openView(p));
-    row.querySelector('[data-update-btn]').addEventListener('click', () => openUpdate(p.id, p.name, p.stock));
-
-    const editBtn = row.querySelector('[data-edit-btn]');
-    const statusBtn = row.querySelector('[data-status-toggle]');
-    const trEl = row.querySelector('tr');
-    
-    if (trEl && p.status === 'inactive') {
-      trEl.style.opacity = '0.6';
-      trEl.style.background = '#f3f4f6';
-    }
-    
-    // Everyone can edit
-    editBtn.addEventListener('click', () => openEdit(p));
-    
-    // Everyone can change status
-    if (statusBtn) {
-      if (p.status === 'inactive') {
-        statusBtn.textContent = 'Activate';
-        statusBtn.style.background = '#10b981';
-        statusBtn.style.color = 'white';
-      } else {
-        statusBtn.textContent = 'Deactivate';
-        statusBtn.style.background = '#fee2e2';
-        statusBtn.style.color = '#dc2626';
-      }
-      statusBtn.addEventListener('click', () => openStatusModal(p));
-    }
-
-    tbody.appendChild(row);
-  });
-}
-
-// ─── Apply Filters ────────────────────────────────────────────────────────
-function applyFilters() {
-  const q = document.getElementById('prod-search').value.trim().toLowerCase();
-  filteredProducts = allProducts.filter(p => {
-    if (!showInactive && p.status === 'inactive') return false;
-    
-    if (q) {
-      return p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.supplier && p.supplier.toLowerCase().includes(q));
-    }
-    return true;
-  });
-  renderTable();
-}
-
-// ─── Search & Toggle filter ───────────────────────────────────────────────
-document.getElementById('prod-search').addEventListener('input', applyFilters);
-document.getElementById('show-inactive-toggle')?.addEventListener('change', function (e) {
-  showInactive = e.target.checked;
-  applyFilters();
-});
-
-// ─── Modal helpers ────────────────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', function (e) {
-    if (e.target === this) closeModal(this.id);
-  });
-});
-
-// ─── View modal: clone the view-body template ─────────────────────────────
-function openView(p) {
-  const tpl = document.getElementById('view-body-tpl');
-  const clone = tpl.content.cloneNode(true);
-
-  clone.querySelector('[data-vname]').textContent = p.name;
-  clone.querySelector('[data-vcategory]').textContent = p.category;
-  clone.querySelector('[data-vstock]').textContent = p.stock + ' Units';
-  clone.querySelector('[data-vprice]').textContent = 'Rs ' + parseFloat(p.price).toFixed(2);
-  clone.querySelector('[data-vcost]').textContent = 'Rs ' + parseFloat(p.cost).toFixed(2);
-  clone.querySelector('[data-vsupplier]').textContent = p.supplier || '—';
-  clone.querySelector('[data-vstorage]').textContent = p.storage || '—';
-
-  const container = document.getElementById('view-modal-body');
-  container.replaceChildren();
-  container.appendChild(clone);
-
-  openModal('view-modal');
-}
-
-// ─── Edit modal ───────────────────────────────────────────────────────────
-function openEdit(p) {
-  document.getElementById('edit-id').value = p.id;
-  document.getElementById('edit-name').value = p.name;
-  document.getElementById('edit-category').value = p.category;
-  document.getElementById('edit-stock').value = p.stock;
-  document.getElementById('edit-price').value = p.price;
-  document.getElementById('edit-cost').value = p.cost;
-  document.getElementById('edit-supplier').value = p.supplier || '';
-  document.getElementById('edit-storage').value = p.storage || '';
-  document.getElementById('edit-msg').style.display = 'none';
-  openModal('edit-modal');
-}
-
-document.getElementById('edit-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const btn = document.getElementById('edit-submit');
-  btn.disabled = true; btn.textContent = 'Saving...';
-
-  const payload = {
-    id: parseInt(document.getElementById('edit-id').value),
-    name: document.getElementById('edit-name').value.trim(),
-    category: document.getElementById('edit-category').value,
-    stock: parseInt(document.getElementById('edit-stock').value),
-    price: parseFloat(document.getElementById('edit-price').value),
-    cost: parseFloat(document.getElementById('edit-cost').value),
-    supplier: document.getElementById('edit-supplier').value.trim(),
-    storage: document.getElementById('edit-storage').value.trim()
-  };
-
-  const msg = document.getElementById('edit-msg');
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
-    method: 'PUT',
-    body: payload
-  });
-  if (data.success) {
-    showMsg(msg, 'success', 'Product updated!');
-    await fetchProducts();
-    setTimeout(() => closeModal('edit-modal'), 1200);
-  } else {
-    showMsg(msg, 'error', ' ' + data.message);
-  }
-
-  btn.disabled = false; btn.textContent = 'Save Changes';
-});
-
-// ─── Update stock modal ───────────────────────────────────────────────────
-function openUpdate(id, name, stock) {
-  document.getElementById('update-id').value = id;
-  document.getElementById('update-product-name').textContent = name;
-  document.getElementById('update-stock').value = stock;
-  document.getElementById('update-msg').style.display = 'none';
-  openModal('update-modal');
-}
-
-document.getElementById('update-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const id = parseInt(document.getElementById('update-id').value);
-  const stock = parseInt(document.getElementById('update-stock').value);
-  const cached = allProducts.find(x => x.id === id) || {};
-
-  const msg = document.getElementById('update-msg');
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
-    method: 'PUT',
-    body: {
-      id, stock,
-      name: cached.name, category: cached.category,
-      price: cached.price, cost: cached.cost,
-      supplier: cached.supplier, storage: cached.storage
-    }
-  });
-
-  if (data.success) {
-    showMsg(msg, 'success', 'Stock updated!');
-    await fetchProducts();
-    setTimeout(() => closeModal('update-modal'), 1000);
-  } else {
-    showMsg(msg, 'error', ' ' + data.message);
-  }
-});
-
-// ─── Update Status Modal ──────────────────────────────────────────────────
-function openStatusModal(p) {
-  statusTargetId = p.id;
-  statusTargetStatus = (p.status === 'inactive') ? 'active' : 'inactive';
-  
-  const msgEl = document.getElementById('status-confirm-msg');
-  const btnEl = document.getElementById('confirm-status-btn');
-  
-  if (statusTargetStatus === 'inactive') {
-    msgEl.textContent = `Are you sure you want to mark ${p.name} as Inactive? It will be hidden from inventory.`;
-    btnEl.textContent = 'Yes, Deactivate';
-    btnEl.style.background = '#ef4444';
-  } else {
-    msgEl.textContent = `Are you sure you want to mark ${p.name} as Active?`;
-    btnEl.textContent = 'Yes, Activate';
-    btnEl.style.background = '#10b981';
-  }
-  
-  openModal('status-modal');
-}
-
-document.getElementById('confirm-status-btn')?.addEventListener('click', async function() {
-  if (!statusTargetId || !statusTargetStatus) return;
-  const btn = this;
-  btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.textContent = 'Updating...';
-
-  const data = await apiCall(`${window.env.API_URL}/api/products.php?action=status`, {
-    method: 'PUT',
-    body: { id: statusTargetId, status: statusTargetStatus }
-  });
-
-  if (data.success) {
-    await fetchProducts();
-    closeModal('status-modal');
-  } else {
-    alert(data.message || 'Error updating product status.');
-  }
-  
-  btn.disabled = false;
-  btn.textContent = originalText;
-});
-
-// ─── Utility ──────────────────────────────────────────────────────────────
-function showMsg(el, type, text) {
-  el.textContent = text;
-  el.className = 'form-message ' + type;
-  el.style.display = 'block';
-}
-
-// ─── Rejections ───────────────────────────────────────────────────────────
-let currentRejections = [];
-function checkRejections(items) {
-  if (items && items.length > 0) {
-    currentRejections = items;
-    showNextRejection();
-  }
-}
-
-function showNextRejection() {
-  if (currentRejections.length === 0) return;
-  const item = currentRejections[0];
-  document.getElementById('rejection-message').textContent = `Admin declined your request to add product: ${item.name}`;
-  openModal('rejection-modal');
-}
-
-document.getElementById('ack-rejection-btn')?.addEventListener('click', async function() {
-  if (currentRejections.length === 0) return;
-  const item = currentRejections[0];
-  const btn = this;
-  btn.disabled = true;
-
-  const data = await apiCall(`${window.env.API_URL}/api/permissions.php?action=acknowledge`, {
-    method: 'POST',
-    body: { product_id: item.id }
-  });
-
-  btn.disabled = false;
-  closeModal('rejection-modal');
-  
-  if (data.success) {
-    currentRejections.shift(); // remove first
-    if (currentRejections.length > 0) {
-      setTimeout(showNextRejection, 500);
-    }
-  }
-});
-
-
-// ─── Load Suppliers for Edit Modal ──────────────────────────────────────────
+// Load suppliers to populate dropdown
 async function loadSuppliers() {
-  const supplierSelect = document.getElementById('edit-supplier');
+  const supplierSelect = document.getElementById('ap-supplier');
   if (!supplierSelect) return;
 
   const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`);
@@ -368,22 +31,77 @@ async function loadSuppliers() {
   }
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadSuppliers();
-  await fetchProducts();
-
-  // Check for auto-open Update Stock modal (from AI Chatbot)
-  const urlParams = new URLSearchParams(window.location.search);
-  const updateId = urlParams.get('update_stock_id');
-  const qty = urlParams.get('qty');
-  if (updateId && qty) {
-    const id = parseInt(updateId);
-    const prod = allProducts.find(p => p.id === id);
-    if (prod) {
-      // Clear URL params to prevent re-opening on refresh
-      window.history.replaceState({}, document.title, window.location.pathname);
-      openUpdate(id, prod.name, qty);
+// Pre-fill fields from URL query params (used by "Order More" link on dashboard)
+function prefillFromParams() {
+  const params = new URLSearchParams(window.location.search);
+  const map = {
+    name: 'ap-name',
+    category: 'ap-category',
+    price: 'ap-price',
+    cost: 'ap-cost',
+    supplier: 'ap-supplier',
+    storage: 'ap-storage',
+  };
+  let anyFilled = false;
+  for (const [param, id] of Object.entries(map)) {
+    const val = params.get(param);
+    if (val) {
+      const el = document.getElementById(id);
+      if (el) { el.value = val; anyFilled = true; }
     }
   }
+  // Focus stock field when coming from low-stock alert
+  if (anyFilled) {
+    const stockEl = document.getElementById('ap-stock');
+    if (stockEl) stockEl.focus();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSuppliers();
+  prefillFromParams();
 });
+
+// ── Form submission ─────────────────────────────────────────────────────────
+document.getElementById('add-product-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const msgEl = document.getElementById('ap-message');
+  const btn = document.getElementById('ap-submit');
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const payload = {
+    name: document.getElementById('ap-name').value.trim(),
+    category: document.getElementById('ap-category').value,
+    stock: parseInt(document.getElementById('ap-stock').value) || 0,
+    price: parseFloat(document.getElementById('ap-price').value) || 0,
+    cost: parseFloat(document.getElementById('ap-cost').value) || 0,
+    supplier: document.getElementById('ap-supplier').value.trim(),
+    storage: document.getElementById('ap-storage').value.trim(),
+  };
+
+  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
+    method: 'POST',
+    body: payload
+  });
+
+  if (data.success) {
+    showFormMsg(msgEl, 'success', 'Product added successfully!');
+    document.getElementById('add-product-form').reset();
+    setTimeout(() => { window.location.href = 'products.html'; }, 1200);
+  } else {
+    showFormMsg(msgEl, 'error', ' ' + data.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Product';
+});
+
+function showFormMsg(el, type, text) {
+  el.textContent = text;
+  el.className = 'form-message ' + type;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
