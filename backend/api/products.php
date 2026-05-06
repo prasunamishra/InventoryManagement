@@ -5,6 +5,7 @@ require_once __DIR__ . '/../controllers/ProductController.php';
 
 setCorsHeaders();
 $method = $_SERVER['REQUEST_METHOD'];
+$action = isset($_GET['action']) ? trim($_GET['action']) : (isset($_REQUEST['action']) ? trim($_REQUEST['action']) : '');
 
 switch ($method) {
     case 'GET':
@@ -14,10 +15,11 @@ switch ($method) {
         sendResponse(createProduct(getJsonBody()));
         break;
     case 'PUT':
-        if (isset($_GET['action']) && $_GET['action'] === 'restock') {
-            sendResponse(restockProduct(getJsonBody()));
-        } elseif (isset($_GET['action']) && $_GET['action'] === 'status') {
+        // Support action-based routing for PUT (status change, restock, or full update)
+        if ($action === 'status') {
             sendResponse(updateProductStatus(getJsonBody()));
+        } elseif ($action === 'restock') {
+            sendResponse(restockProduct(getJsonBody()));
         } else {
             sendResponse(updateProduct(getJsonBody()));
         }
