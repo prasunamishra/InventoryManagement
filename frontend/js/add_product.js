@@ -3,8 +3,36 @@
  * BUG FIX: was listening to '#addProductForm' but HTML id is 'add-product-form'
  */
 
+// Load suppliers to populate dropdown
+async function loadSuppliers() {
+  const supplierSelect = document.getElementById('ap-supplier');
+  if (!supplierSelect) return;
+
+  const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`);
+  if (data && data.success !== false) {
+    const suppliers = data.suppliers || [];
+    supplierSelect.replaceChildren();
+    
+    const defaultOption = document.createElement('option');
+    defaultOption.value = "";
+    defaultOption.textContent = "Select a Supplier";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    supplierSelect.appendChild(defaultOption);
+
+    suppliers.forEach(s => {
+      const option = document.createElement('option');
+      option.value = s.name;
+      option.textContent = s.name;
+      supplierSelect.appendChild(option);
+    });
+  } else {
+    supplierSelect.innerHTML = '<option value="">Error loading suppliers</option>';
+  }
+}
+
 // Pre-fill fields from URL query params (used by "Order More" link on dashboard)
-(function prefillFromParams() {
+function prefillFromParams() {
   const params = new URLSearchParams(window.location.search);
   const map = {
     name: 'ap-name',
@@ -27,7 +55,12 @@
     const stockEl = document.getElementById('ap-stock');
     if (stockEl) stockEl.focus();
   }
-})();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSuppliers();
+  prefillFromParams();
+});
 
 // ── Form submission ─────────────────────────────────────────────────────────
 document.getElementById('add-product-form').addEventListener('submit', async function (e) {
