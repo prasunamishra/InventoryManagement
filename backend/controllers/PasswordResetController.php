@@ -30,7 +30,7 @@ function sendResetLink(string $email, string $role = 'admin'): array {
     // Build the reset link
     $protocol  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
     $host      = $_SERVER['HTTP_HOST'];
-    $resetLink = $protocol . "://" . $host . "/groceryflowupdate/frontend/html/reset_password.html?token=" . $token;
+    $resetLink = $protocol . "://" . $host . "/inventorymanagement/frontend/html/reset_password.html?token=" . $token;
 
     // Build HTML email body
     $body = "
