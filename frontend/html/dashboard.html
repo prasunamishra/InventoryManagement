@@ -15,6 +15,68 @@
 
 
 
+  <!-- SEARCH BANNER -->
+  <div class="dashboard-banner">
+    <div class="dashboard-banner-inner">
+      <div class="search-wrapper">
+        <div class="search-box dashboard-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input id="dashboard-search" class="search-input" type="text" placeholder="Search products, orders…" autocomplete="off">
+          <button class="search-clear hidden" id="search-clear" title="Clear">✕</button>
+        </div>
+      </div>
+      <div class="search-results hidden" id="search-results"></div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-cards-section">
+    <div class="stat-cards">
+      <div class="stat-card stat-blue">
+        <div class="stat-icon">📦</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-products">—</div>
+          <div class="stat-label">Products</div>
+        </div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="stat-icon">🏪</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-stock">—</div>
+          <div class="stat-label">Total Stock</div>
+        </div>
+      </div>
+      <div class="stat-card stat-red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-lowstock">—</div>
+          <div class="stat-label">Low Stock</div>
+        </div>
+      </div>
+      <div class="stat-card stat-yellow">
+        <div class="stat-icon">🚚</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-orders">—</div>
+          <div class="stat-label">Orders</div>
+        </div>
+      </div>
+      <div class="stat-card stat-purple">
+        <div class="stat-icon">👥</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-staff">—</div>
+          <div class="stat-label">Staff</div>
+        </div>
+      </div>
+      <div class="stat-card stat-teal" style="cursor:pointer;" onclick="window.location.href='purchase_returns.html'" title="View all purchase returns">
+        <div class="stat-icon">↩️</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-returns">—</div>
+          <div class="stat-label">Returns</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MAIN CONTENT -->
   <main class="dashboard-main">
     <div class="dashboard-grid">
@@ -47,6 +109,19 @@
         <p class="no-data hidden" id="permissions-no-data">No pending requests.</p>
       </section>
 
+      <!-- PURCHASE RETURNS -->
+      <section class="transactions-section" style="grid-column: 1 / -1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 class="section-title" style="margin-bottom:0;">Recent Purchase Returns</h2>
+          <a href="purchase_returns.html" class="confirm-btn" style="font-size:13px;padding:8px 18px;">+ NEW RETURN</a>
+        </div>
+        <div id="pr-recent-list">
+          <!-- Populated by dashboard.js -->
+        </div>
+        <p class="no-data hidden" id="pr-no-data">No purchase returns yet.</p>
+        <a href="purchase_returns.html" class="view-all-link">VIEW ALL RETURNS →</a>
+      </section>
+
     </div>
   </main>
 
@@ -62,7 +137,6 @@
       </div>
       <div class="alert-card-bottom">
         <div class="alert-stock" data-alert-stock></div>
-        <a href="#" class="order-btn" data-alert-link>Order More</a>
       </div>
     </div>
   </template>
@@ -90,6 +164,20 @@
       <div class="txn-right" style="display: flex; gap: 8px;">
         <button class="confirm-btn" data-perm-approve style="padding: 5px 10px; font-size: 11px;">Approve</button>
         <button class="delete-btn" data-perm-reject style="padding: 5px 10px; font-size: 11px; margin: 0;">Reject</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Purchase Return Recent Item Template -->
+  <template id="pr-recent-tpl">
+    <div class="transaction-item">
+      <div class="txn-info">
+        <div class="txn-name" data-pr-item></div>
+        <div class="txn-location" data-pr-meta></div>
+      </div>
+      <div class="txn-right">
+        <span style="font-size:12px;font-family:monospace;color:#6b7280;" data-pr-invoice></span>
+        <span style="font-size:13px;font-weight:700;color:#dc2626;" data-pr-qty></span>
       </div>
     </div>
   </template>
