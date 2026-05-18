@@ -1,75 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Staff – GroceryFlow</title>
-  <meta name="description" content="GroceryFlow – Add a new staff member">
-  <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8"> <!-- encoding -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsive -->
+  <title>Add Staff Registration</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc; /* background */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #334155;
+    }
+
+    .reg-container {
+      max-width: 800px;
+      margin: 40px auto; /* center */
+      padding: 0 20px;
+    }
+
+    .back-btn {
+      background-color: #1e6b8c;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 18px;
+      cursor: pointer;
+      display: inline-block;
+      margin-bottom: 24px;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background-color: #15546e; /* hover */
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 20px 0;
+    }
+
+    .reg-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .reg-field {
+      margin-bottom: 28px; /* spacing */
+    }
+
+    .reg-label {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .reg-input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 0;
+      font-size: 18px;
+      color: #334155;
+      outline: none;
+      background: transparent;
+      transition: border-color 0.2s;
+    }
+
+    .reg-input::placeholder {
+      color: #cbd5e1;
+    }
+
+    .reg-input:focus {
+      border-bottom-color: #1e6b8c; /* focus */
+    }
+    
+    /* role pills */
+    .role-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .role-group input[type="radio"] {
+      display: none; /* hide radio */
+    }
+
+    .role-pill {
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-group input[type="radio"]:checked + .role-pill {
+      background: #e0f2fe;
+      color: #0284c7; /* selected */
+    }
+    
+    .submit-btn {
+      background-color: #026aa7;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+
+    .submit-btn:hover {
+      background-color: #025687; /* hover */
+    }
+    
+    .form-message {
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 18px;
+      margin-bottom: 20px;
+      display: none; /* hidden */
+    }
+
+    .form-message.error {
+      background-color: #fef2f2;
+      color: #ef4444;
+      border: 1px solid #fee2e2;
+    }
+
+    .form-message.success {
+      background-color: #f0fdf4;
+      color: #22c55e;
+      border: 1px solid #dcfce7;
+    }
+  </style>
 </head>
 
-<body class="inner-page">
-  <div id="header-placeholder"></div>
+<body>
 
-  <main class="inner-main">
+  <div class="reg-container">
 
-    <button onclick="window.history.back()" class="confirm-btn back-btn">
-      ← Previous
-    </button>
+    <!-- back -->
+    <a href="staff.html" class="back-btn">&larr; Previous</a>
+    
+    <h1 class="page-title" id="page-heading">Registration</h1>
+    
+    <div class="reg-card">
 
-    <h1 class="page-title staff-page-title">Registration</h1>
-
-    <div class="form-card staff-form-card">
-
-      <form id="staffForm" novalidate>
-
-        <div class="form-group staff-form-group">
-          <label class="ap-label staff-label" for="stf-name">FULL NAME</label>
-          <input class="ap-input staff-input" type="text" id="stf-name" required placeholder="e.g. Alexander Pierce">
+      <!-- form -->
+      <form id="staff-form" novalidate>
+        <input type="hidden" id="staff-id"> <!-- hidden id -->
+        
+        <!-- name -->
+        <div class="reg-field">
+          <label class="reg-label" for="staff-name">FULL NAME *</label>
+          <input class="reg-input" type="text" id="staff-name" placeholder="e.g. Alexander Pierce" required>
         </div>
+        
+        <!-- email -->
+        <div class="reg-field">
+          <label class="reg-label" for="staff-email">EMAIL ADDRESS *</label>
+          <input class="reg-input" type="email" id="staff-email" placeholder="alex@example.com" required>
+        </div>
+        
+        <!-- username -->
+        <div class="reg-field">
+          <label class="reg-label" for="staff-username">USERNAME *</label>
+          <input class="reg-input" type="text" id="staff-username" placeholder="apierce_ops" required>
+        </div>
+        
+        <!-- password -->
+        <div class="reg-field">
+          <label class="reg-label" for="staff-password" id="lbl-password">PASSWORD *</label>
+          <input class="reg-input" type="text" id="staff-password" placeholder="********" required>
+          <p style="font-size: 18px; color: #94a3b8; margin-top: 6px;" id="pw-hint">
+            Min 8 chars, Uppercase, Lowercase, Number, Special Char
+          </p>
+        </div>
+        
+        <!-- phone -->
+        <div class="reg-field">
+          <label class="reg-label" for="staff-phone">PHONE NO.</label>
+          <input class="reg-input" type="text" id="staff-phone" placeholder="10-digit number">
+        </div>
+        
+        <!-- role -->
+        <div class="reg-field">
+          <label class="reg-label">ROLE *</label>
+          <div class="role-group">
 
-        <div class="staff-form-row">
-          <div class="form-group staff-form-col">
-            <label class="ap-label" for="stf-username">USERNAME</label>
-            <input class="ap-input" type="text" id="stf-username" required placeholder="apierce_ops" autocomplete="off">
+            <input type="radio" id="role-admin" name="job_role" value="Admin">
+            <label for="role-admin" class="role-pill">Admin</label>
+
+            <input type="radio" id="role-staff" name="job_role" value="Staff" checked>
+            <label for="role-staff" class="role-pill">Staff</label>
+            
+            <input type="radio" id="role-sup" name="job_role" value="Supervisor">
+            <label for="role-sup" class="role-pill">Supervisor</label>
           </div>
-          <div class="form-group staff-form-col-relative">
-            <label class="ap-label" for="stf-password">PASSWORD</label>
-            <input class="ap-input" type="password" id="stf-password" required placeholder="••••••••"
-              autocomplete="new-password">
-          </div>
         </div>
-
-        <div class="form-group staff-form-group-md">
-          <label class="ap-label staff-label" for="stf-phone">PHONE NO.</label>
-          <input class="ap-input staff-input" type="tel" id="stf-phone" required pattern="[0-9]{10}" maxlength="10"
-            placeholder="10-digit number">
-        </div>
-
-        <div class="form-group form-group-xl">
-          <label class="ap-label">ROLE</label>
-          <input type="hidden" id="stf-role" value="Inventory Manager">
-          <div class="role-selector">
-            <button type="button" class="role-btn role-active" data-value="Inventory Manager">Inventory Manager</button>
-            <button type="button" class="role-btn" data-value="Floor Staff">Floor Staff</button>
-            <button type="button" class="role-btn" data-value="Logistics Coordinator">Logistics Coordinator</button>
-            <button type="button" class="role-btn" data-value="Supervisor">Supervisor</button>
-          </div>
-        </div>
-
-        <div class="form-actions staff-form-actions">
-          <p id="stf-message" class="form-message stf-message-hidden"></p>
-          <button type="submit" class="confirm-btn stf-submit-btn" id="stf-submit">Add Staff</button>
-        </div>
+        
+        <div id="form-msg" class="form-message"></div> <!-- message -->
+        
+        <!-- submit -->
+        <button type="submit" class="submit-btn" id="submit-btn">Add Staff</button>
       </form>
     </div>
-  </main>
+  </div>
 
+  <!-- scripts -->
   <script src="../js/env.js"></script>
   <script src="../js/api.js"></script>
-  <script src="../js/components.js"></script>
   <script src="../js/add_staff.js"></script>
 </body>
-
 </html>
