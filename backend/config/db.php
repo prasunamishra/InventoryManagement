@@ -1,7 +1,7 @@
 <?php
 /**
  * Database Configuration
- * GroceryFlow – PDO connection setup
+ * INVENTORY MANAGEMENT – PDO connection setup
  */
 
 //  DB CONFIG 
