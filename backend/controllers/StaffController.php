@@ -31,6 +31,12 @@ function addStaff($data) {
     $password = trim($data['password'] ?? '');
     $job_role = trim($data['job_role'] ?? 'Inventory Manager'); // default job role if not provided
 
+    // nobody should be able to create an admin account through this endpoint
+    // this is a safety check in case someone sends a crafted request
+    if (strtolower($job_role) === 'admin') {
+        return ["success" => false, "message" => "Cannot assign Admin role.", "_code" => 403];
+    }
+
     // all four fields are required
     if (!$name || !$username || !$password || !$email) {
         return ["success" => false, "message" => "Name, username, email, and password are required.", "_code" => 400];
@@ -62,18 +68,23 @@ function addStaff($data) {
 // updates an existing staff member's info
 function updateStaff($data) {
     global $pdo;
-    $id       = intval($data['id']       ?? 0);
-    $name     = trim($data['name']       ?? '');
-    $username = trim($data['username']   ?? '');
-    $email    = trim($data['email']      ?? '');
-    $job_role = trim($data['job_role']   ?? '');
-    $password = trim($data['password']   ?? ''); // password is optional on update
+    $id       = intval($data['id']     ?? 0);
+    $name     = trim($data['name']     ?? '');
+    $username = trim($data['username'] ?? '');
+    $email    = trim($data['email']    ?? '');
+    $job_role = trim($data['job_role'] ?? '');
+    $password = trim($data['password'] ?? ''); // password is optional on update
+
+    // same protection as addStaff - can't promote someone to admin through this endpoint
+    if (strtolower($job_role) === 'admin') {
+        return ["success" => false, "message" => "Cannot assign Admin role.", "_code" => 403];
+    }
 
     if (!$id || !$name || !$username || !$email) {
         return ["success" => false, "message" => "Missing required fields.", "_code" => 400];
     }
     
-    // check username uniqueness but exclude the current user (can keep their own username)
+    // check username uniqueness but exclude the current user (they can keep their own username)
     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
     $stmt->execute([$username, $id]);
     if ($stmt->fetch()) {
