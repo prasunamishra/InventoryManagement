@@ -29,8 +29,8 @@ function createProduct($data) {
     $supplier = trim($data['supplier'] ?? '');
     $storage  = trim($data['storage']  ?? '');
 
-    if (!$name || !$category) {
-        return ["success" => false, "message" => "Product name and category are required.", "_code" => 400];
+    if (!$name || !$category || !$supplier) {
+        return ["success" => false, "message" => "Product name, category, and supplier are required.", "_code" => 400];
     }
 
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
@@ -70,8 +70,8 @@ function updateProduct($data) {
     $supplier = trim($data['supplier']     ?? '');
     $storage  = trim($data['storage']      ?? '');
 
-    if (!$id || !$name || !$category) {
-        return ["success" => false, "message" => "ID, name and category are required.", "_code" => 400];
+    if (!$id || !$name || !$category || !$supplier) {
+        return ["success" => false, "message" => "ID, name, category, and supplier are required.", "_code" => 400];
     }
 
     $stmt = $pdo->prepare(
@@ -108,4 +108,34 @@ function deleteProduct($data) {
     }
 
     return ["success" => true, "message" => "Product deleted."];
+}
+
+function restockProduct($data) {
+    global $pdo;
+    $id = (int) ($data['id'] ?? 0);
+    $addedStock = (int) ($data['added_stock'] ?? 0);
+
+    if (!$id || $addedStock <= 0) {
+        return ["success" => false, "message" => "Invalid ID or restock amount.", "_code" => 400];
+    }
+
+    $stmt = $pdo->prepare("UPDATE products SET stock = stock + ? WHERE id = ?");
+    $stmt->execute([$addedStock, $id]);
+
+    return ["success" => true, "message" => "Stock updated successfully."];
+}
+
+function updateProductStatus($data) {
+    global $pdo;
+    $id = (int) ($data['id'] ?? 0);
+    $status = trim($data['status'] ?? '');
+
+    if (!$id || !in_array($status, ['active', 'inactive'])) {
+        return ["success" => false, "message" => "Invalid product ID or status.", "_code" => 400];
+    }
+
+    $stmt = $pdo->prepare("UPDATE products SET status = ? WHERE id = ?");
+    $stmt->execute([$status, $id]);
+
+    return ["success" => true, "message" => "Product status updated."];
 }
