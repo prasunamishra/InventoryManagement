@@ -5,14 +5,14 @@ require_once __DIR__ . '/../config/helpers.php';
 // Get all staff members (users where role = 'staff')
 function getStaffList() {
     global $pdo;
-    $stmt = $pdo->query("SELECT id, name, username, email, phone, job_role, created_at FROM users ORDER BY created_at DESC");
+    $stmt = $pdo->query("SELECT id, name, username, email, phone, job_role, created_at, status FROM users ORDER BY created_at DESC");
     return ["success" => true, "staff" => $stmt->fetchAll(PDO::FETCH_ASSOC)];
 }
 
 // Get a single staff member by ID
 function getStaffById($id) {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT id, name, username, email, phone, job_role FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, name, username, email, phone, job_role, status FROM users WHERE id = ?");
     $stmt->execute([$id]);
     $staff = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -110,15 +110,25 @@ function updateStaff($data) {
     return ["success" => true, "message" => "Staff member updated successfully."];
 }
 
-// Delete a staff member
-function deleteStaff($data) {
+// Update a staff member's status (Activate / Deactivate)
+// We use this instead of hard-deleting records so that past data (like logs or orders they managed)
+// doesn't break. An inactive user simply can't log in anymore.
+function updateStaffStatus($data) {
     global $pdo;
     $id = intval($data['id'] ?? 0);
+    $status = trim($data['status'] ?? '');
     
+    // Quick safety checks
     if (!$id) return ["success" => false, "message" => "Invalid ID.", "_code" => 400];
+    if (!in_array($status, ['active', 'inactive'])) {
+        return ["success" => false, "message" => "Invalid status.", "_code" => 400];
+    }
     
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'staff'");
-    $stmt->execute([$id]);
+    // Update the status in the database. 
+    // We explicitly check role = 'staff' just to be extra safe and not accidentally deactivate an admin!
+    $stmt = $pdo->prepare("UPDATE users SET status = ? WHERE id = ? AND role = 'staff'");
+    $stmt->execute([$status, $id]);
     
-    return ["success" => true, "message" => "Staff member removed."];
+    $action = $status === 'active' ? 'activated' : 'deactivated';
+    return ["success" => true, "message" => "Staff member $action successfully."];
 }
