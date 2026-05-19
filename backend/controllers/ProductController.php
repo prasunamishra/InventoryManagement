@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../config/db.php';        // database connection
 require_once __DIR__ . '/../config/helpers.php';  // helper functions
 
-// -------------------- RBAC CHECK --------------------
+//  RBAC CHECK
 // yo function le check garxa user direct product modify garna milxa ki nai
 function productCallerCanWriteDirectly(): bool {
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
@@ -14,7 +14,7 @@ function productCallerCanWriteDirectly(): bool {
     return $role === 'admin' || strtolower($jobRole) === 'supervisor';
 }
 
-// -------------------- REQUEST SYSTEM --------------------
+//  REQUEST SYSTEM 
 // direct access chaina vane pending request create garne
 function productSubmitPendingRequest(string $actionType, array $payload, string $description): array {
     require_once __DIR__ . '/RequestController.php';
@@ -26,7 +26,7 @@ function productSubmitPendingRequest(string $actionType, array $payload, string 
     ]);
 }
 
-// -------------------- GET PRODUCTS --------------------
+//  GET PRODUCTS 
 // sabai approved product + stock + latest invoice lina
 function getProducts() {
     global $pdo;
@@ -68,7 +68,7 @@ function getProducts() {
     return ["success" => true, "products" => $rows, "rejectedItems" => $rejected];
 }
 
-// -------------------- CREATE PRODUCT --------------------
+//  CREATE PRODUCT 
 // single product lai bulk format ma convert garxa
 function createProduct($data) {
 
@@ -89,7 +89,7 @@ function createProduct($data) {
     return bulkCreateProducts($data);
 }
 
-// -------------------- BULK CREATE --------------------
+//  BULK CREATE 
 function bulkCreateProducts($data) {
     global $pdo;
 
@@ -161,7 +161,7 @@ function bulkCreateProducts($data) {
     }
 }
 
-// -------------------- UPDATE PRODUCT --------------------
+//  UPDATE PRODUCT 
 function updateProduct($data) {
     global $pdo;
 
@@ -183,7 +183,7 @@ function updateProduct($data) {
     return ["success" => true, "message" => "Product updated"];
 }
 
-// -------------------- DELETE PRODUCT --------------------
+//  DELETE PRODUCT 
 function deleteProduct($data) {
     global $pdo;
 
@@ -203,7 +203,7 @@ function deleteProduct($data) {
     return ["success" => true, "message" => "Product deleted"];
 }
 
-// -------------------- UPDATE STATUS --------------------
+// UPDATE STATUS 
 function updateProductStatus($data) {
     global $pdo;
 
@@ -224,7 +224,7 @@ function updateProductStatus($data) {
     return ["success" => true, "message" => "Status updated"];
 }
 
-// -------------------- APPROVAL --------------------
+//  APPROVAL 
 // admin/supervisor le approve/reject garne
 function updateApprovalStatus($data) {
     global $pdo;
