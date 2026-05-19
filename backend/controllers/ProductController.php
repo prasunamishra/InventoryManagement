@@ -2,39 +2,39 @@
 require_once __DIR__ . '/../config/db.php';        // database connection
 require_once __DIR__ . '/../config/helpers.php';  // helper functions
 
-//  RBAC CHECK 
-// user direct product modify garna milxa ki nai check
+// -------------------- RBAC CHECK --------------------
+// yo function le check garxa user direct product modify garna milxa ki nai
 function productCallerCanWriteDirectly(): bool {
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
     $role    = $_SESSION['role']     ?? '';
     $jobRole = $_SESSION['job_role'] ?? '';
 
-    // admin ya supervisor matra direct write garna milxa
+    // admin ya supervisor matra direct change garna paauxa
     return $role === 'admin' || strtolower($jobRole) === 'supervisor';
 }
 
-//  SUBMIT REQUEST
-// direct access chaina vane request system ma pathaune
+// -------------------- REQUEST SYSTEM --------------------
+// direct access chaina vane pending request create garne
 function productSubmitPendingRequest(string $actionType, array $payload, string $description): array {
     require_once __DIR__ . '/RequestController.php';
 
     return submitRequest([
-        'action_type' => $actionType,
-        'payload'     => $payload,
-        'description' => $description,
+        'action_type' => $actionType, // k action ho (create/update/delete)
+        'payload'     => $payload,    // actual data
+        'description' => $description, // description for admin
     ]);
 }
 
-//  GET PRODUCTS
-// approved product haru + stock info fetch garne
+// -------------------- GET PRODUCTS --------------------
+// sabai approved product + stock + latest invoice lina
 function getProducts() {
     global $pdo;
 
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
     $userId = $_SESSION['user_id'] ?? 0;
 
-    // product + latest invoice + stock calculate
+    // product + stock calculation
     $rows = $pdo->query(
         "SELECT p.*,
             (SELECT pur.invoice_number 
@@ -42,8 +42,11 @@ function getProducts() {
              JOIN purchases pur ON pur.id = pi.purchase_id 
              WHERE pi.product_id = p.id 
              ORDER BY pur.purchase_date DESC LIMIT 1) as latest_invoice,
+
+            -- stock = total IN - total OUT
             COALESCE(SUM(CASE WHEN sl.type='IN' THEN sl.quantity ELSE 0 END), 0)
-          - COALESCE(SUM(CASE WHEN sl.type='OUT' AND sl.reference_type != 'order' THEN sl.quantity ELSE 0 END), 0) AS stock
+          - COALESCE(SUM(CASE WHEN sl.type='OUT' THEN sl.quantity ELSE 0 END), 0) AS stock
+
          FROM products p
          LEFT JOIN stock_ledger sl ON sl.product_id = p.id
          WHERE p.approval_status = 'approved'
@@ -51,7 +54,7 @@ function getProducts() {
          ORDER BY p.created_at DESC"
     )->fetchAll(PDO::FETCH_ASSOC);
 
-    // rejected product notification
+    // rejected product notification (user lai dekhau)
     $rejected = [];
     if ($userId) {
         $stmt = $pdo->prepare(
@@ -65,17 +68,16 @@ function getProducts() {
     return ["success" => true, "products" => $rows, "rejectedItems" => $rejected];
 }
 
-// CREATE PRODUCT
-// single ya bulk create handle garne
+// -------------------- CREATE PRODUCT --------------------
+// single product lai bulk format ma convert garxa
 function createProduct($data) {
-    global $pdo;
 
-    // bulk action ho vane
+    // bulk create ho vane direct call
     if (isset($data['action']) && $data['action'] === 'bulk_create') {
         return bulkCreateProducts($data);
     }
 
-    // single product lai bulk format ma convert garne
+    // single product lai array ma convert
     $data['products'] = [[
         'name' => trim($data['name'] ?? ''),
         'category' => $data['category'] ?? '',
@@ -87,24 +89,23 @@ function createProduct($data) {
     return bulkCreateProducts($data);
 }
 
-// BULK CREATE
+// -------------------- BULK CREATE --------------------
 function bulkCreateProducts($data) {
     global $pdo;
 
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-    $userId  = $_SESSION['user_id'] ?? 0;
-    $role    = $_SESSION['role']    ?? '';
+    $role    = $_SESSION['role'] ?? '';
     $jobRole = $_SESSION['job_role'] ?? '';
 
     $isAdmin = $role === 'admin' || strtolower($jobRole) === 'supervisor';
 
-    // staff ho vane direct create chaina → request pathaune
+    // staff le direct create garna paaudaina → request pathaune
     if (!$isAdmin && empty($data['_bypass_approval'])) {
         return productSubmitPendingRequest(
             'create_product',
             $data,
-            "Add products request"
+            "Product add request"
         );
     }
 
@@ -113,13 +114,13 @@ function bulkCreateProducts($data) {
     $items    = $data['products'] ?? [];
 
     if (!$supplier || !$invoice || empty($items)) {
-        return ["success" => false, "message" => "Missing required fields"];
+        return ["success" => false, "message" => "Required data missing"];
     }
 
     $pdo->beginTransaction();
 
     try {
-        // purchase create garne
+        // purchase header create
         $pdo->prepare(
             "INSERT INTO purchases (invoice_number, supplier_name)
              VALUES (?, ?)"
@@ -135,7 +136,7 @@ function bulkCreateProducts($data) {
                 throw new Exception("Invalid product data");
             }
 
-            // product insert
+            // product create
             $pdo->prepare(
                 "INSERT INTO products (name, approval_status)
                  VALUES (?, 'approved')"
@@ -143,7 +144,7 @@ function bulkCreateProducts($data) {
 
             $productId = $pdo->lastInsertId();
 
-            // stock IN entry
+            // stock IN add garne
             $pdo->prepare(
                 "INSERT INTO stock_ledger (product_id, type, quantity)
                  VALUES (?, 'IN', ?)"
@@ -151,7 +152,8 @@ function bulkCreateProducts($data) {
         }
 
         $pdo->commit();
-        return ["success" => true, "message" => "Products added"];
+
+        return ["success" => true, "message" => "Products added successfully"];
 
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -159,13 +161,13 @@ function bulkCreateProducts($data) {
     }
 }
 
-//  UPDATE PRODUCT 
+// -------------------- UPDATE PRODUCT --------------------
 function updateProduct($data) {
     global $pdo;
 
     // staff ho vane request pathaune
     if (!productCallerCanWriteDirectly()) {
-        return productSubmitPendingRequest('update_product', $data, "Update product");
+        return productSubmitPendingRequest('update_product', $data, "Update request");
     }
 
     $id = (int)($data['id'] ?? 0);
@@ -181,7 +183,7 @@ function updateProduct($data) {
     return ["success" => true, "message" => "Product updated"];
 }
 
-//  DELETE PRODUCT 
+// -------------------- DELETE PRODUCT --------------------
 function deleteProduct($data) {
     global $pdo;
 
@@ -191,18 +193,17 @@ function deleteProduct($data) {
         return ["success" => false, "message" => "ID required"];
     }
 
-    // staff ho vane request pathaune
+    // staff → request system
     if (!productCallerCanWriteDirectly()) {
-        return productSubmitPendingRequest('delete_product', $data, "Delete product");
+        return productSubmitPendingRequest('delete_product', $data, "Delete request");
     }
 
-    $pdo->prepare("DELETE FROM products WHERE id = ?")
-        ->execute([$id]);
+    $pdo->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
 
-    return ["success" => true, "message" => "Deleted"];
+    return ["success" => true, "message" => "Product deleted"];
 }
 
-//  UPDATE STATUS 
+// -------------------- UPDATE STATUS --------------------
 function updateProductStatus($data) {
     global $pdo;
 
@@ -210,11 +211,11 @@ function updateProductStatus($data) {
     $status = trim($data['status'] ?? '');
 
     if (!$id || !in_array($status, ['active', 'inactive'])) {
-        return ["success" => false, "message" => "Invalid data"];
+        return ["success" => false, "message" => "Invalid input"];
     }
 
     if (!productCallerCanWriteDirectly()) {
-        return productSubmitPendingRequest('update_product_status', $data, "Change status");
+        return productSubmitPendingRequest('update_product_status', $data, "Status change request");
     }
 
     $pdo->prepare("UPDATE products SET status = ? WHERE id = ?")
@@ -223,8 +224,8 @@ function updateProductStatus($data) {
     return ["success" => true, "message" => "Status updated"];
 }
 
-//  APPROVAL 
-// admin le approve ya reject garne
+// -------------------- APPROVAL --------------------
+// admin/supervisor le approve/reject garne
 function updateApprovalStatus($data) {
     global $pdo;
 
@@ -240,7 +241,7 @@ function updateApprovalStatus($data) {
     $status = trim($data['approval_status'] ?? '');
 
     if (!$id || !in_array($status, ['approved', 'rejected'])) {
-        return ["success" => false, "message" => "Invalid data"];
+        return ["success" => false, "message" => "Invalid input"];
     }
 
     $pdo->prepare("UPDATE products SET approval_status = ? WHERE id = ?")
