@@ -4,44 +4,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Dashboard page title -->
   <title>Dashboard – GroceryFlow</title>
-
   <meta name="description" content="GroceryFlow Dashboard – Inventory and Logistics Overview">
-
-  <!-- Main CSS file -->
   <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body class="dashboard-page">
 
-  <!-- Header will load here dynamically -->
   <div id="header-placeholder"></div>
 
 
-  <!-- Search section for searching products and orders -->
+
+  <!-- SEARCH BANNER -->
   <div class="dashboard-banner">
     <div class="dashboard-banner-inner">
       <div class="search-wrapper">
         <div class="search-box dashboard-search-wrap">
           <span class="search-icon">🔍</span>
-
-          <input id="dashboard-search" class="search-input" type="text"
-            placeholder="Search products, orders…" autocomplete="off">
-
+          <input id="dashboard-search" class="search-input" type="text" placeholder="Search products, orders…"
+            autocomplete="off">
           <button class="search-clear hidden" id="search-clear" title="Clear">✕</button>
         </div>
       </div>
-
       <div class="search-results hidden" id="search-results"></div>
     </div>
   </div>
 
-  <!-- Dashboard summary cards showing total products, stock, orders, staff, etc. -->
+  <!-- STAT CARDS -->
   <div class="stat-cards-section">
     <div class="stat-cards">
-
       <div class="stat-card stat-blue">
         <div class="stat-icon">📦</div>
         <div class="stat-body">
@@ -49,7 +40,6 @@
           <div class="stat-label">Products</div>
         </div>
       </div>
-
       <div class="stat-card stat-green">
         <div class="stat-icon">🏪</div>
         <div class="stat-body">
@@ -57,7 +47,6 @@
           <div class="stat-label">Total Stock</div>
         </div>
       </div>
-
       <div class="stat-card stat-red">
         <div class="stat-icon">⚠️</div>
         <div class="stat-body">
@@ -65,7 +54,6 @@
           <div class="stat-label">Low Stock</div>
         </div>
       </div>
-
       <div class="stat-card stat-yellow">
         <div class="stat-icon">🚚</div>
         <div class="stat-body">
@@ -73,7 +61,6 @@
           <div class="stat-label">Orders</div>
         </div>
       </div>
-
       <div class="stat-card stat-purple">
         <div class="stat-icon">👥</div>
         <div class="stat-body">
@@ -81,7 +68,6 @@
           <div class="stat-label">Staff</div>
         </div>
       </div>
-
       <div class="stat-card stat-teal">
         <div class="stat-icon">↩️</div>
         <div class="stat-body">
@@ -89,233 +75,149 @@
           <div class="stat-label">Returns</div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Main dashboard content area -->
+  <!-- MAIN CONTENT -->
   <main class="dashboard-main">
     <div class="dashboard-grid">
 
-      <!-- Section displaying recent orders -->
+      <!-- RECENT ORDERS -->
       <section class="transactions-section">
         <h2 class="section-title">Recent Orders</h2>
-
         <div id="logistics-list">
           <!-- Populated by dashboard.js -->
         </div>
-
         <p class="no-data hidden" id="logistics-no-data">No recent orders.</p>
-
         <a href="logistics.html" class="view-all-link">VIEW ALL ORDERS →</a>
       </section>
 
-      <!-- Section showing low stock product alerts -->
+      <!-- LOW STOCK ALERTS -->
       <section class="alerts-section">
         <h2 class="section-title">Low Stock Alert</h2>
-
         <div id="alerts-list">
           <!-- Populated by dashboard.js -->
         </div>
-
         <p class="no-data hidden" id="alerts-no-data">No low-stock items</p>
       </section>
 
-      <!-- Admin/Supervisor approval request management section -->
-      <section class="alerts-section approval-panel" id="permissions-section"
-        style="display:none; grid-column: 1 / -1;">
-
+      <!-- APPROVAL PANEL (Admin / Supervisor only) -->
+      <section class="alerts-section approval-panel" id="permissions-section" style="display:none; grid-column: 1 / -1;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-
           <h2 class="section-title" style="margin-bottom:0;">
             Approval Panel
             <span id="approval-badge" class="approval-badge hidden"></span>
           </h2>
-
           <div class="approval-filter-tabs" id="approval-filter-tabs">
-
-            <button class="approval-tab active" data-status="Pending"
-              onclick="switchApprovalTab(this,'Pending')">
-              Pending
-            </button>
-
-            <button class="approval-tab" data-status="Approved"
-              onclick="switchApprovalTab(this,'Approved')">
-              Approved
-            </button>
-
-            <button class="approval-tab" data-status="Rejected"
-              onclick="switchApprovalTab(this,'Rejected')">
-              Rejected
-            </button>
-
+            <button class="approval-tab active" data-status="Pending"   onclick="switchApprovalTab(this,'Pending')">Pending</button>
+            <button class="approval-tab"         data-status="Approved" onclick="switchApprovalTab(this,'Approved')">Approved</button>
+            <button class="approval-tab"         data-status="Rejected" onclick="switchApprovalTab(this,'Rejected')">Rejected</button>
           </div>
         </div>
-
         <div id="permissions-list"></div>
-
         <p class="no-data hidden" id="permissions-no-data">No requests found.</p>
       </section>
 
-      <!-- Section displaying recent purchase returns -->
+      <!-- PURCHASE RETURNS -->
       <section class="transactions-section" style="grid-column: 1 / -1;">
-
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-
-          <h2 class="section-title" style="margin-bottom:0;">
-            Recent Purchase Returns
-          </h2>
-
-          <a href="purchase_returns.html" class="confirm-btn"
-            style="font-size: 18px;padding:8px 18px;">
-            + NEW RETURN
-          </a>
+          <h2 class="section-title" style="margin-bottom:0;">Recent Purchase Returns</h2>
+          <a href="purchase_returns.html" class="confirm-btn" style="font-size: 18px;padding:8px 18px;">+ NEW RETURN</a>
         </div>
-
         <div id="pr-recent-list">
           <!-- Populated by dashboard.js -->
         </div>
-
         <p class="no-data hidden" id="pr-no-data">No purchase returns yet.</p>
-
-        <a href="purchase_returns.html" class="view-all-link">
-          VIEW ALL RETURNS →
-        </a>
+        <a href="purchase_returns.html" class="view-all-link">VIEW ALL RETURNS →</a>
       </section>
 
     </div>
   </main>
 
-  <!-- Footer will load here dynamically -->
   <div id="footer-placeholder"></div>
 
-  <!-- Templates section -->
+  <!-- TEMPLATES -->
 
-  <!-- Template used for generating low stock alert cards dynamically -->
+  <!-- Alert Card Template -->
   <template id="alert-tpl">
     <div class="alert-card" style="cursor:pointer;" data-alert-link>
-
       <div class="alert-card-top">
         <h3 class="alert-product" data-alert-name></h3>
         <span class="alert-warning-icon">⚠️</span>
       </div>
-
       <div class="alert-card-bottom">
         <div class="alert-stock" data-alert-stock></div>
-
-        <a href="add_product.html" class="order-btn" data-alert-restock>
-          Restock Now →
-        </a>
+        <a href="add_product.html" class="order-btn" data-alert-restock>Restock Now →</a>
       </div>
-
     </div>
   </template>
 
-  <!-- Template used for generating recent order items dynamically -->
+  <!-- Recent Logistics Template -->
   <template id="logistics-item-tpl">
     <div class="transaction-item">
-
       <div class="txn-info">
         <div class="txn-name" data-log-name></div>
         <div class="txn-location" data-log-location></div>
       </div>
-
       <div class="txn-right">
         <span class="status-badge" data-log-badge></span>
       </div>
-
     </div>
   </template>
 
-  <!-- Template used for generating approval request items dynamically -->
+  <!-- Permission Item Template -->
   <template id="permission-item-tpl">
     <div class="transaction-item">
-
       <div class="txn-info">
         <div class="txn-name" data-perm-name></div>
-
-        <div class="txn-location"
-          style="font-size: 18px; color:#6b7280;"
-          data-perm-username>
-        </div>
+        <div class="txn-location" style="font-size: 18px; color:#6b7280;" data-perm-username></div>
       </div>
-
       <div class="txn-right" style="display: flex; gap: 8px;">
-
-        <button class="confirm-btn"
-          data-perm-approve
-          style="padding: 5px 10px; font-size: 18px;">
-          Approve
-        </button>
-
-        <button class="delete-btn"
-          data-perm-reject
-          style="padding: 5px 10px; font-size: 18px; margin: 0;">
-          Reject
-        </button>
-
+        <button class="confirm-btn" data-perm-approve style="padding: 5px 10px; font-size: 18px;">Approve</button>
+        <button class="delete-btn" data-perm-reject
+          style="padding: 5px 10px; font-size: 18px; margin: 0;">Reject</button>
       </div>
-
     </div>
   </template>
 
-  <!-- Template used for generating recent purchase return items dynamically -->
+  <!-- Purchase Return Recent Item Template -->
   <template id="pr-recent-tpl">
     <div class="transaction-item">
-
       <div class="txn-info">
         <div class="txn-name" data-pr-item></div>
         <div class="txn-location" data-pr-meta></div>
       </div>
-
       <div class="txn-right">
-
-        <span style="font-size: 18px;font-family:monospace;color:#6b7280;"
-          data-pr-invoice>
-        </span>
-
-        <span style="font-size: 18px;font-weight:700;color:#dc2626;"
-          data-pr-qty>
-        </span>
-
+        <span style="font-size: 18px;font-family:monospace;color:#6b7280;" data-pr-invoice></span>
+        <span style="font-size: 18px;font-weight:700;color:#dc2626;" data-pr-qty></span>
       </div>
-
     </div>
   </template>
 
-  <!-- Template used for grouping search result categories -->
+  <!-- Search Result Group Label Template -->
   <template id="search-group-tpl">
     <div class="search-group-label" data-group-name></div>
   </template>
 
-  <!-- Template used for displaying search result items -->
+  <!-- Search Result Item Template -->
   <template id="search-item-tpl">
     <div class="search-result-item" data-search-link>
-
       <div class="search-result-main">
         <span class="search-result-name" data-search-name></span>
         <span class="search-result-meta" data-search-meta></span>
       </div>
-
       <span class="search-result-badge" data-search-badge></span>
     </div>
   </template>
 
-  <!-- Template shown when no search result is found -->
   <template id="search-no-results-tpl">
     <div class="search-no-results" data-no-results></div>
   </template>
 
-  <!-- Environment configuration file -->
   <script src="../js/env.js"></script>
-
-  <!-- API handling script -->
   <script src="../js/api.js"></script>
-
-  <!-- Reusable components script -->
   <script src="../js/components.js"></script>
 
-  <!-- Main dashboard functionality script -->
   <script src="../js/dashboard.js"></script>
 
 </body>
