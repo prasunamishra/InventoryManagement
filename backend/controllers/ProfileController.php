@@ -61,9 +61,14 @@ function updateProfile($data) {
         return ["success" => false, "message" => "Name and username are required.", "_code" => 400];
     }
 
-    // email ma @ xa ki xaina check garxa (basic validation)
-    if ($email && strpos($email, '@') === false) {
-        return ["success" => false, "message" => "Invalid email address containing '@' is required.", "_code" => 400];
+    // Validate proper email format and ensure it ends with .com
+    if ($email) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ["success" => false, "message" => "Please enter a valid email address.", "_code" => 400];
+        }
+        if (!preg_match('/\.com$/i', $email)) {
+            return ["success" => false, "message" => "Email must end with .com", "_code" => 400];
+        }
     }
 
     // check garxa yo username already aru user le use gareko xa ki xaina
