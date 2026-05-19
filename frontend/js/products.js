@@ -1,143 +1,169 @@
-let allProducts = [];
-let filteredProducts = [];
-let productToDeleteId = null;
+/**
+ * Product list page functions
+ */
 
-// ─── Fetch products from API ──────────────────────────────────────────────
+let allProducts      = [];
+let filteredProducts = [];
+
+// Get all products from API
 async function fetchProducts() {
   const data = await apiCall(`${window.env.API_URL}/api/products.php`);
   if (data && data.success !== false) {
     allProducts = data.products || [];
-    filteredProducts = [...allProducts];
-    renderTable();
-    checkRejections(data.rejectedItems || []);
+    applyFilters();
   } else {
-    console.error('Products load error:', data?.message);
     const tbody = document.getElementById('prod-tbody');
-    tbody.replaceChildren();
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = 5;
-    td.className = 'no-data';
-    td.textContent = 'Error loading products.';
-    tr.appendChild(td);
-    tbody.appendChild(tr);
+    tbody.innerHTML = '<tr><td colspan="6" class="no-data">Error loading products.</td></tr>';
   }
 }
 
-// ─── Render table using <template> ────────────────────────────────────────
+// Show products in table
 function renderTable() {
-  const tbody = document.getElementById('prod-tbody');
-  const tpl = document.getElementById('prod-row-tpl');
-  const role = (sessionStorage.getItem('gf_role') || 'admin').trim().toLowerCase();
-  const jobRole = (sessionStorage.getItem('gf_job_role') || '').trim().toLowerCase();
-
-  const isAdmin = role !== 'staff' || jobRole === 'supervisor';
-
-  // Everyone can add products (staff additions go to pending)
-  const addBtn = document.getElementById('add-product-btn');
-  if (addBtn) addBtn.style.display = '';
+  const tbody  = document.getElementById('prod-tbody');
+  const tpl    = document.getElementById('prod-row-tpl');
 
   tbody.replaceChildren();
 
+  // Show message if no products found
   if (filteredProducts.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
-    td.colSpan = 5;
-    td.className = 'no-data';
-    td.textContent = 'No products found.';
-    tr.appendChild(td);
-    tbody.appendChild(tr);
+    td.colSpan = 6; td.className = 'no-data'; td.textContent = 'No products found.';
+    tr.appendChild(td); tbody.appendChild(tr);
     return;
   }
 
   filteredProducts.forEach(p => {
-    // Clone the row template defined in products.html
     const row = tpl.content.cloneNode(true);
 
-    // Product name & SKU
     row.querySelector('[data-name]').textContent = p.name;
-    row.querySelector('[data-sku]').textContent = 'SKU: ' + p.sku;
+    row.querySelector('[data-sku]').textContent  = 'SKU: ' + p.sku;
 
-    // Category badge — set class and text, colour applied via style
-    const catCell = row.querySelector('[data-category]');
-    const badge = document.createElement('span');
+    // Show latest invoice number
+    const invCell = row.querySelector('[data-invoice]');
+    if (invCell) invCell.textContent = p.latest_invoice || '—';
+
+    // Show category badge
+    const catCell  = row.querySelector('[data-category]');
+    const badge    = document.createElement('span');
     badge.textContent = p.category;
-    const catClass = 'cat-' + (p.category || 'other').toLowerCase();
-    badge.className = `cat-badge ${catClass}`;
+    badge.className   = `cat-badge cat-${(p.category || 'other').toLowerCase().replace(/\s+/g, '')}`;
     catCell.appendChild(badge);
 
-    // Stock — apply low/ok class, no HTML string needed
+    // Show stock status
     const stockCell = row.querySelector('[data-stock]');
+    const stockVal  = parseInt(p.stock ?? 0, 10);
     const stockSpan = document.createElement('span');
-    stockSpan.textContent = p.stock + ' Units';
-    stockSpan.className = p.stock < 10 ? 'stock-low' : 'stock-ok';
+    stockSpan.textContent = stockVal + ' Units';
+    stockSpan.className   = stockVal < 10 ? 'stock-low' : 'stock-ok';
     stockCell.appendChild(stockSpan);
 
-    // Price
+    // Show add stock link if stock is empty
+    if (stockVal === 0) {
+      const addLink = document.createElement('a');
+      addLink.href = 'add_product.html';
+      addLink.textContent = ' + Add Stock';
+      addLink.style.cssText = 'font-size:18px;color:#2563eb;margin-left:6px;white-space:nowrap;';
+      addLink.title = 'Add product and record initial stock';
+      stockCell.appendChild(addLink);
+    }
+
+    // Show product price
     const priceTd = row.querySelector('[data-price]');
-    priceTd.className = 'prod-price';
-    priceTd.textContent = 'Rs. ';
-    const priceSpan = document.createElement('span');
-    priceSpan.textContent = parseFloat(p.price).toFixed(0);
-    priceTd.appendChild(priceSpan);
+    priceTd.className   = 'prod-price';
+    priceTd.textContent = 'Rs ' + parseFloat(p.price || 0).toFixed(0);
 
-    // Buttons
+    // Open product details modal
     row.querySelector('[data-view-btn]').addEventListener('click', () => openView(p));
-    row.querySelector('[data-update-btn]').addEventListener('click', () => openUpdate(p.id, p.name, p.stock));
 
-    const editBtn = row.querySelector('[data-edit-btn]');
-    const deleteBtn = row.querySelector('[data-delete-btn]');
-    
-    // Everyone can edit
-    editBtn.addEventListener('click', () => openEdit(p));
-    
-    // Only Admin/Supervisor can delete directly
-    if (isAdmin) {
-      deleteBtn.addEventListener('click', () => promptDelete(p.id, p.name));
-    } else {
-      deleteBtn.style.display = 'none';
+    // Open edit modal
+    row.querySelector('[data-edit-btn]').addEventListener('click', () => openEdit(p));
+
+    // Go to stock page
+    const updateBtn = row.querySelector('[data-update-btn]');
+    if (updateBtn) {
+      updateBtn.textContent = 'Stock';
+      updateBtn.title = 'Manage stock on Stock page';
+      updateBtn.addEventListener('click', () => {
+        window.location.href = `stock.html`;
+      });
     }
 
     tbody.appendChild(row);
   });
 }
 
-// ─── Search filter ────────────────────────────────────────────────────────
-document.getElementById('prod-search').addEventListener('input', function () {
-  const q = this.value.trim().toLowerCase();
-  filteredProducts = q
-    ? allProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      (p.supplier && p.supplier.toLowerCase().includes(q))
-    )
-    : [...allProducts];
+// Filter products
+function applyFilters() {
+  const q        = (document.getElementById('prod-search')?.value || '').toLowerCase();
+  const cat      = document.getElementById('prod-filter-category')?.value || '';
+  const supplier = document.getElementById('prod-filter-supplier')?.value || '';
+
+  filteredProducts = allProducts.filter(p => {
+    if (cat      && p.category !== cat)       return false;
+    if (supplier && p.supplier !== supplier)  return false;
+
+    // Search product by name, sku, description or supplier
+    if (q) {
+      return p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q) ||
+        (p.supplier || '').toLowerCase().includes(q);
+    }
+
+    return true;
+  });
+
   renderTable();
+}
+
+// Search input event
+document.getElementById('prod-search')?.addEventListener('input', applyFilters);
+
+// Category filter event
+document.getElementById('prod-filter-category')?.addEventListener('change', applyFilters);
+
+// Supplier filter event
+document.getElementById('prod-filter-supplier')?.addEventListener('change', applyFilters);
+
+// Reset all filters
+document.getElementById('prod-filter-reset')?.addEventListener('click', () => {
+  ['prod-search', 'prod-filter-category', 'prod-filter-supplier'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  applyFilters();
 });
 
-// ─── Modal helpers ────────────────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+// Open modal
+function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
+
+// Close modal
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+// Close modal when clicking outside
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', function (e) {
     if (e.target === this) closeModal(this.id);
   });
 });
 
-// ─── View modal: clone the view-body template ─────────────────────────────
+// Open product view modal
 function openView(p) {
-  const tpl = document.getElementById('view-body-tpl');
+  const tpl   = document.getElementById('view-body-tpl');
   const clone = tpl.content.cloneNode(true);
 
-  clone.querySelector('[data-vname]').textContent = p.name;
+  clone.querySelector('[data-vname]').textContent     = p.name;
   clone.querySelector('[data-vcategory]').textContent = p.category;
-  clone.querySelector('[data-vstock]').textContent = p.stock + ' Units';
-  clone.querySelector('[data-vprice]').textContent = 'Rs ' + parseFloat(p.price).toFixed(2);
-  clone.querySelector('[data-vcost]').textContent = 'Rs ' + parseFloat(p.cost).toFixed(2);
+  clone.querySelector('[data-vstock]').textContent    = (parseInt(p.stock ?? 0, 10)) + ' Units (from ledger)';
+  clone.querySelector('[data-vprice]').textContent    = 'Rs ' + parseFloat(p.price || 0).toFixed(2);
+  clone.querySelector('[data-vcost]').textContent     = 'Rs ' + parseFloat(p.cost  || 0).toFixed(2);
   clone.querySelector('[data-vsupplier]').textContent = p.supplier || '—';
-  clone.querySelector('[data-vstorage]').textContent = p.storage || '—';
+  clone.querySelector('[data-vstorage]').textContent  = p.storage  || '—';
+
+  // Show product description
+  const descEl = clone.querySelector('[data-vdescription]');
+  if (descEl) descEl.textContent = p.description || '—';
 
   const container = document.getElementById('view-modal-body');
   container.replaceChildren();
@@ -146,159 +172,142 @@ function openView(p) {
   openModal('view-modal');
 }
 
-// ─── Edit modal ───────────────────────────────────────────────────────────
+// Open edit modal and fill product data
 function openEdit(p) {
-  document.getElementById('edit-id').value = p.id;
-  document.getElementById('edit-name').value = p.name;
-  document.getElementById('edit-category').value = p.category;
-  document.getElementById('edit-stock').value = p.stock;
-  document.getElementById('edit-price').value = p.price;
-  document.getElementById('edit-cost').value = p.cost;
-  document.getElementById('edit-supplier').value = p.supplier || '';
-  document.getElementById('edit-storage').value = p.storage || '';
-  document.getElementById('edit-msg').style.display = 'none';
+  document.getElementById('edit-id').value          = p.id;
+  document.getElementById('edit-name').value        = p.name;
+  document.getElementById('edit-category').value    = p.category;
+  document.getElementById('edit-price').value       = p.price;
+  document.getElementById('edit-cost').value        = p.cost;
+  document.getElementById('edit-storage').value     = p.storage || '';
+
+  const descEl = document.getElementById('edit-description');
+  if (descEl) descEl.value = p.description || '';
+
+  const suppEl = document.getElementById('edit-supplier');
+  if (suppEl) suppEl.value = p.supplier || '';
+
+  const msgEl = document.getElementById('edit-msg');
+  if (msgEl) msgEl.style.display = 'none';
+
+  const btn = document.getElementById('edit-submit');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
+
   openModal('edit-modal');
 }
 
-document.getElementById('edit-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const btn = document.getElementById('edit-submit');
-  btn.disabled = true; btn.textContent = 'Saving...';
+// Prevent form submit on Enter key
+document.getElementById('edit-form')?.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+});
 
+// Save edited product
+document.getElementById('edit-form')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const btn = document.getElementById('edit-submit');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  // Create update payload
   const payload = {
-    id: parseInt(document.getElementById('edit-id').value),
-    name: document.getElementById('edit-name').value.trim(),
-    category: document.getElementById('edit-category').value,
-    stock: parseInt(document.getElementById('edit-stock').value),
-    price: parseFloat(document.getElementById('edit-price').value),
-    cost: parseFloat(document.getElementById('edit-cost').value),
-    supplier: document.getElementById('edit-supplier').value.trim(),
-    storage: document.getElementById('edit-storage').value.trim()
+    id:          parseInt(document.getElementById('edit-id').value),
+    name:        document.getElementById('edit-name').value.trim(),
+    category:    document.getElementById('edit-category').value,
+    price:       parseFloat(document.getElementById('edit-price').value)  || 0,
+    cost:        parseFloat(document.getElementById('edit-cost').value)   || 0,
+    supplier:    (document.getElementById('edit-supplier')?.value || '').trim(),
+    storage:     document.getElementById('edit-storage').value.trim(),
+    description: (document.getElementById('edit-description')?.value || '').trim(),
   };
 
-  const msg = document.getElementById('edit-msg');
+  const msg  = document.getElementById('edit-msg');
+
+  // Send update request
   const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
     method: 'PUT',
     body: payload
   });
+
   if (data.success) {
-    showMsg(msg, 'success', 'Product updated!');
-    await fetchProducts();
-    setTimeout(() => closeModal('edit-modal'), 1200);
-  } else {
-    showMsg(msg, 'error', ' ' + data.message);
-  }
 
-  btn.disabled = false; btn.textContent = 'Save Changes';
-});
+    // Request goes for approval
+    if (data.request_id) {
+      showMsg(msg, 'success', '⏳ Edit request submitted for Admin/Supervisor approval.');
+      setTimeout(() => closeModal('edit-modal'), 2000);
 
-// ─── Update stock modal ───────────────────────────────────────────────────
-function openUpdate(id, name, stock) {
-  document.getElementById('update-id').value = id;
-  document.getElementById('update-product-name').textContent = name;
-  document.getElementById('update-stock').value = stock;
-  document.getElementById('update-msg').style.display = 'none';
-  openModal('update-modal');
-}
+    } else {
 
-document.getElementById('update-form').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const id = parseInt(document.getElementById('update-id').value);
-  const stock = parseInt(document.getElementById('update-stock').value);
-  const cached = allProducts.find(x => x.id === id) || {};
-
-  const msg = document.getElementById('update-msg');
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
-    method: 'PUT',
-    body: {
-      id, stock,
-      name: cached.name, category: cached.category,
-      price: cached.price, cost: cached.cost,
-      supplier: cached.supplier, storage: cached.storage
+      // Product updated directly
+      showMsg(msg, 'success', 'Product updated!');
+      await fetchProducts();
+      setTimeout(() => closeModal('edit-modal'), 1200);
     }
-  });
 
-  if (data.success) {
-    showMsg(msg, 'success', 'Stock updated!');
-    await fetchProducts();
-    setTimeout(() => closeModal('update-modal'), 1000);
   } else {
     showMsg(msg, 'error', ' ' + data.message);
   }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Changes';
 });
 
-// ─── Delete ───────────────────────────────────────────────────────────────
-function promptDelete(id, name) {
-  productToDeleteId = id;
-  openModal('delete-modal');
+// Load supplier list
+async function loadSuppliers() {
+  const editSel   = document.getElementById('edit-supplier');
+  const filterSel = document.getElementById('prod-filter-supplier');
+
+  const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`);
+
+  if (data && data.success !== false) {
+    const suppliers = data.suppliers || [];
+
+    // Add suppliers to edit dropdown
+    if (editSel) {
+      editSel.replaceChildren();
+
+      const def = document.createElement('option');
+      def.value = '';
+      def.textContent = 'Select a Supplier';
+      def.disabled = true;
+      def.selected = true;
+
+      editSel.appendChild(def);
+
+      suppliers.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = s.name;
+        editSel.appendChild(opt);
+      });
+    }
+
+    // Add suppliers to filter dropdown
+    if (filterSel) {
+      suppliers.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = s.name;
+        filterSel.appendChild(opt);
+      });
+    }
+  }
 }
 
-document.getElementById('confirm-delete-btn').addEventListener('click', async function () {
-  if (!productToDeleteId) return;
-  const btn = this;
-  btn.disabled = true; btn.textContent = 'DELETING...';
-
-  const data = await apiCall(`${window.env.API_URL}/api/products.php`, {
-    method: 'DELETE',
-    body: { id: productToDeleteId }
-  });
-
-  if (data.success) {
-    await fetchProducts();
-    closeModal('delete-modal');
-  } else {
-    alert(data.message || 'Error deleting product.');
-  }
-
-  btn.disabled = false; btn.textContent = 'DELETE';
-  productToDeleteId = null;
-});
-
-// ─── Utility ──────────────────────────────────────────────────────────────
+// Show message in form
 function showMsg(el, type, text) {
+  if (!el) return;
+
   el.textContent = text;
-  el.className = 'form-message ' + type;
+  el.className   = 'form-message ' + type;
   el.style.display = 'block';
 }
 
-// ─── Rejections ───────────────────────────────────────────────────────────
-let currentRejections = [];
-function checkRejections(items) {
-  if (items && items.length > 0) {
-    currentRejections = items;
-    showNextRejection();
-  }
-}
-
-function showNextRejection() {
-  if (currentRejections.length === 0) return;
-  const item = currentRejections[0];
-  document.getElementById('rejection-message').textContent = `Admin declined your request to add product: ${item.name}`;
-  openModal('rejection-modal');
-}
-
-document.getElementById('ack-rejection-btn')?.addEventListener('click', async function() {
-  if (currentRejections.length === 0) return;
-  const item = currentRejections[0];
-  const btn = this;
-  btn.disabled = true;
-
-  const data = await apiCall(`${window.env.API_URL}/api/permissions.php?action=acknowledge`, {
-    method: 'POST',
-    body: { product_id: item.id }
-  });
-
-  btn.disabled = false;
-  closeModal('rejection-modal');
-  
-  if (data.success) {
-    currentRejections.shift(); // remove first
-    if (currentRejections.length > 0) {
-      setTimeout(showNextRejection, 500);
-    }
-  }
+// Run page functions after page load
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSuppliers();
+  await fetchProducts();
 });
-
-
-// ─── Init ─────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', fetchProducts);

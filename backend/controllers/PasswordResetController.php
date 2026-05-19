@@ -32,12 +32,10 @@ function sendResetLink(string $email, string $role = 'admin'): array
     );
     $stmt->execute([$email, $hashedToken, $role]);
 
-    // reset link banaune
-    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
-    $host = $_SERVER['HTTP_HOST'];
-
-    $resetLink = $protocol . "://" . $host .
-        "/InventoryManagement/frontend/html/reset_password.html?token=" . $token;
+    // Build the reset link
+    $protocol  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
+    $host      = $_SERVER['HTTP_HOST'];
+    $resetLink = $protocol . "://" . $host . "/inventorymanagement/frontend/html/reset_password.html?token=" . $token;
 
     // email body (HTML format)
     $body = "

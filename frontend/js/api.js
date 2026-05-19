@@ -34,5 +34,6 @@ async function apiCall(endpoint, options = {}) {
   } catch (err) {
     console.error(`API Call failed for ${endpoint}:`, err);
     return { success: false, message: 'Unable to connect to server. Please try again.' };
+
   }
 }
