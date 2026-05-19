@@ -1,32 +1,56 @@
 <?php
-require_once __DIR__ . '/../config/helpers.php';
-require_once __DIR__ . '/../config/auth.php'; // PHP session integration
-require_once __DIR__ . '/../controllers/ProductController.php';
+require_once __DIR__ . '/../config/helpers.php';   // helper functions load garne
+require_once __DIR__ . '/../config/auth.php';      // authentication check garne
+require_once __DIR__ . '/../controllers/ProductController.php'; // product related functions
 
-setCorsHeaders();
-$method = $_SERVER['REQUEST_METHOD'];
-$action = isset($_GET['action']) ? trim($_GET['action']) : (isset($_REQUEST['action']) ? trim($_REQUEST['action']) : '');
+setCorsHeaders(); // frontend bata API call allow garne (CORS)
+
+$method = $_SERVER['REQUEST_METHOD']; // कुन HTTP method aayo (GET, POST, PUT, DELETE)
 
 switch ($method) {
+
     case 'GET':
+        // sabai product list fetch garne
         sendResponse(getProducts());
         break;
+
     case 'POST':
-        sendResponse(createProduct(getJsonBody()));
-        break;
-    case 'PUT':
-        // Support action-based routing for PUT (status change, restock, or full update)
-        if ($action === 'status') {
-            sendResponse(updateProductStatus(getJsonBody()));
-        } elseif ($action === 'restock') {
-            sendResponse(restockProduct(getJsonBody()));
-        } else {
-            sendResponse(updateProduct(getJsonBody()));
+        // JSON body bata data lina
+        $body   = getJsonBody();
+
+        // कुन action ho decide garne (default create)
+        $action = $body['action'] ?? 'create';
+
+        // product ko status update (active/inactive)
+        if ($action === 'update_status') {
+            sendResponse(updateProductStatus($body));
+        } 
+        
+        // admin le product approve/reject garne
+        elseif ($action === 'approve') {
+            sendResponse(updateApprovalStatus($body));
+        } 
+        
+        // default case: naya product create garne
+        else {
+            sendResponse(createProduct($body));
         }
         break;
+
+    case 'PUT':
+        // existing product update garne
+        sendResponse(updateProduct(getJsonBody()));
+        break;
+
     case 'DELETE':
+        // product delete garne
         sendResponse(deleteProduct(getJsonBody()));
         break;
+
     default:
-        sendResponse(['success' => false, 'message' => 'Method not allowed.'], 405);
+        // aru method allow chaina
+        sendResponse([
+            'success' => false,
+            'message' => 'Method not allowed.'
+        ], 405);
 }
