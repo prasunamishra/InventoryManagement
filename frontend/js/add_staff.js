@@ -1,78 +1,101 @@
-/**
- * add_staff.js – Add new staff member form logic
- */
+document.addEventListener('DOMContentLoaded', async () => {
 
-// Role button selection logic
-document.querySelectorAll('.role-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    // Remove active class from all
-    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('role-active'));
-    // Add active class to clicked
-    btn.classList.add('role-active');
-    // Set hidden input value
-    document.getElementById('stf-role').value = btn.dataset.value;
-  });
+  const urlParams = new URLSearchParams(window.location.search); // get query params
+  const staffId = urlParams.get('id'); // get id
+
+  if (staffId) {
+    // switch to edit mode
+    document.getElementById('page-heading').textContent = 'Edit Staff Member';
+    document.getElementById('submit-btn').textContent = 'Update Staff';
+
+    document.getElementById('lbl-password').innerHTML =
+      'PASSWORD <span style="font-size:18px; font-weight:normal; color:#6b7280;">(Leave blank to keep current)</span>';
+
+    document.getElementById('staff-password').required = false; // not required
+    document.getElementById('staff-password').placeholder = 'Leave blank to keep current';
+
+    // fetch staff
+    const data = await apiCall(`${window.env.API_URL}/api/staff.php?id=${staffId}`);
+
+    if (data.success) {
+      const s = data.staff;
+
+      document.getElementById('staff-id').value = s.id; // set id
+      document.getElementById('staff-name').value = s.name; // set name
+      document.getElementById('staff-username').value = s.username; // set username
+      document.getElementById('staff-email').value = s.email || ''; // set email
+
+      // set role
+      const roleInputs = document.querySelectorAll('input[name="job_role"]');
+      roleInputs.forEach(r => {
+        if (r.value === s.job_role) r.checked = true;
+      });
+    }
+  }
 });
 
-document.getElementById('staffForm').addEventListener('submit', async function (e) {
+// form submit
+document.getElementById('staff-form')?.addEventListener('submit', async function(e) {
   e.preventDefault();
+  
+  const id = document.getElementById('staff-id').value; // id
+  const name = document.getElementById('staff-name').value.trim(); // name
+  const username = document.getElementById('staff-username').value.trim(); // username
+  const email = document.getElementById('staff-email').value.trim(); // email
 
-  const msgEl = document.getElementById('stf-message');
-  const btn = document.getElementById('stf-submit');
-  const phoneInput = document.getElementById('stf-phone');
-  const phone = phoneInput.value.trim();
+  const jobRoleInput = document.querySelector('input[name="job_role"]:checked');
+  const job_role = jobRoleInput ? jobRoleInput.value : 'Staff'; // role
 
-  phoneInput.setCustomValidity("");
+  const password = document.getElementById('staff-password').value; // password
 
-  if (!/^\d{10}$/.test(phone)) {
-    phoneInput.setCustomValidity("Phone number must be exactly 10 digits.");
-    phoneInput.reportValidity();
+  const msg = document.getElementById('form-msg');
+  msg.style.display = 'none'; // hide msg
 
-    // Clear validation instantly as user types
-    phoneInput.addEventListener('input', function clearVal() {
-      phoneInput.setCustomValidity("");
-      phoneInput.removeEventListener('input', clearVal);
-    });
+  // validation
+  if (!name || !username || !email) {
+    showMsg(msg, 'error', 'Name, username, and email are required.');
     return;
   }
+  
+  if (!id && !password) {
+    showMsg(msg, 'error', 'Password is required for new staff members.');
+    return;
+  }
+  
+  if (password) {
+    const pwError = validateStrongPassword(password); // check password
+    if (pwError) {
+      showMsg(msg, 'error', pwError);
+      return;
+    }
+  }
 
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
+  const btn = document.getElementById('submit-btn');
+  const originalText = btn.textContent;
 
-  const payload = {
-    name: document.getElementById('stf-name').value.trim(),
-    username: document.getElementById('stf-username').value.trim(),
-    password: document.getElementById('stf-password').value.trim(),
-    role: document.getElementById('stf-role').value,
-    phone: phone
-  };
+  btn.disabled = true; 
+  btn.textContent = 'Saving...'; // loading
+
+  const payload = { id, name, username, email, job_role, password };
+  const method = id ? 'PUT' : 'POST'; // update or create
 
   const data = await apiCall(`${window.env.API_URL}/api/staff.php`, {
-    method: 'POST',
-    body: payload
+    method, body: payload
   });
 
   if (data.success) {
-    showFormMsg(msgEl, 'success', '✓ Staff member added!');
-    document.getElementById('staffForm').reset();
-    // reset role
-    document.querySelectorAll('.role-btn').forEach((b, i) => {
-      b.classList.toggle('role-active', i === 0);
-    });
-    document.getElementById('stf-role').value = document.querySelector('.role-btn').dataset.value;
-
-    setTimeout(() => { window.location.href = 'staff.html'; }, 1000);
+    showMsg(msg, 'success', data.message); // success
+    setTimeout(() => window.location.href = 'staff.html', 1500); // redirect
   } else {
-    showFormMsg(msgEl, 'error', '✗ ' + data.message);
+    showMsg(msg, 'error', data.message); // error
+    btn.disabled = false; 
+    btn.textContent = originalText;
   }
-
-  btn.disabled = false;
-  btn.textContent = 'Add Staff';
 });
 
-function showFormMsg(el, type, text) {
+// show message
+function showMsg(el, type, text) {
   el.textContent = text;
-  el.className = 'form-message ' + type;
+  el.className = `form-message ${type}`;
   el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
