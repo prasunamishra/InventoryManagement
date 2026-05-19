@@ -1,89 +1,94 @@
 <?php
-require_once __DIR__ . '/../config/db.php';        // database connection
-require_once __DIR__ . '/../config/helpers.php';  // helper functions
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/helpers.php';
 
-//  GET PROFILE 
-// current logged-in user ko profile lina
+// 1. Get current user's profile detailss
 function getProfile() {
     global $pdo;
 
-    // session start (if already start bhayeko chaina vane)
+    // session start garxa if already start bhayeko chaina
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
 
-    // user login chaina vane unauthorized
+    // check garxa user login xa ki xaina
     if (!isset($_SESSION['user_id'])) {
+        // login xaina vane unauthorized return garxa
         return ["success" => false, "message" => "Unauthorized.", "_code" => 401];
     }
 
+    // session bata user_id linxa
     $userId = $_SESSION['user_id'];
 
-    // database bata user detail fetch garne
+    // database bata user ko basic info (id, username, name, email) fetch garxa
     $stmt = $pdo->prepare("SELECT id, username, name, email FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
-    // user bhetena vane error
+    // user vetiyena vane error dinxa
     if (!$user) {
         return ["success" => false, "message" => "User not found.", "_code" => 404];
     }
 
-    // success ma profile return garne
+    // sabai thik xa vane profile data return garxa
     return ["success" => true, "profile" => $user];
 }
 
-//  UPDATE PROFILE 
-// user ko name, email, username update garne
+// 2. Update user's name, email, and username in DB and session
 function updateProfile($data) {
     global $pdo;
 
-    // session start
+    // session start garxa if not started
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
 
-    // login check
+    // check login xa ki xaina
     if (!isset($_SESSION['user_id'])) {
         return ["success" => false, "message" => "Unauthorized.", "_code" => 401];
     }
 
+    // session bata user_id linxa
     $userId = $_SESSION['user_id'];
 
-    // input data lina
+    // input bata data linxa ani trim garxa (extra space hatauna)
     $name = trim($data['name'] ?? '');
     $email = trim($data['email'] ?? '');
     $newUsername = trim($data['username'] ?? '');
 
-    // validation (name ra username compulsory)
+    // name ra username empty bhayo vane error dinxa
     if (!$name || !$newUsername) {
         return ["success" => false, "message" => "Name and username are required.", "_code" => 400];
     }
 
-    // check: username already use bhako xa ki nai
+    // email ma @ xa ki xaina check garxa (basic validation)
+    if ($email && strpos($email, '@') === false) {
+        return ["success" => false, "message" => "Invalid email address containing '@' is required.", "_code" => 400];
+    }
+
+    // check garxa yo username already aru user le use gareko xa ki xaina
     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
     $stmt->execute([$newUsername, $userId]);
 
+    // same username vetiyo vane error dinxa
     if ($stmt->fetch()) {
         return ["success" => false, "message" => "Username is already taken.", "_code" => 409];
     }
 
-    // old username lina (reference ko lagi)
+    // old username fetch garxa (yo part actually use bhayeko chaina)
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $oldUser = $stmt->fetch();
     $oldUsername = $oldUser['username'];
 
-    // database update garne
-    $stmt = $pdo->prepare(
-        "UPDATE users SET name = ?, email = ?, username = ? WHERE id = ?"
-    );
+    // database ma user ko data update garxa
+    $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, username = ? WHERE id = ?");
     $stmt->execute([$name, $email, $newUsername, $userId]);
 
-    // session ma pani update garne
+    // session ma pani new username update garxa
     $_SESSION['username'] = $newUsername;
 
-    // success response
+    // success message return garxa
     return [
         "success" => true,
         "message" => "Profile updated successfully.",
