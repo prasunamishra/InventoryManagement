@@ -47,6 +47,9 @@ document.getElementById('add-supplier-form').addEventListener('submit', async fu
     msg.hidden = false;
     this.reset();
     setTimeout(() => { window.location.href = 'suppliers.html'; }, 1200);
+  } else if (data.message && data.message.toLowerCase().includes('already exists')) {
+    // Duplicate — show styled popup
+    showAlertPopup('Duplicate Supplier', data.message);
   } else {
     msg.textContent = ' ' + (data.message || 'Failed to add supplier.');
     msg.className = 'form-message error';

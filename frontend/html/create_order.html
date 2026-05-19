@@ -1,65 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Logistics Order – GroceryFlow</title>
-  <meta name="description" content="GroceryFlow – Create a new logistics delivery order">
+  <meta name="description" content="GroceryFlow – Create a multi-product logistics delivery order">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* ── Order Items Builder ─────────────────────────────── */
+    .order-items-section { margin-top: 24px; }
+    .order-items-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .order-items-title {
+      font-size: 18px; font-weight: 700; letter-spacing: .08em;
+      color: #6b7280; text-transform: uppercase;
+    }
+    .add-item-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f0fdf4; color: #16a34a; border: 1.5px solid #bbf7d0;
+      padding: 6px 14px; border-radius: 8px; font-size: 18px;
+      font-weight: 600; cursor: pointer; transition: all .2s;
+    }
+    .add-item-btn:hover { background: #dcfce7; border-color: #86efac; }
+    .order-item-row {
+      display: grid; grid-template-columns: 1fr 1fr 90px 90px 40px;
+      gap: 10px; align-items: end;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 14px; margin-bottom: 10px;
+      transition: border-color .2s;
+    }
+    .order-item-row:hover { border-color: #d1d5db; }
+    .order-item-row .ap-label { font-size: 18px; color: #6b7280; margin-bottom: 4px; display: block; }
+    .remove-item-btn {
+      background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca;
+      width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0; align-self: flex-end;
+    }
+    .remove-item-btn:hover { background: #fee2e2; }
+    .order-summary-bar {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+      color: #fff; border-radius: 12px; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 16px; margin-bottom: 8px;
+    }
+    .order-summary-bar span { font-size: 18px; opacity: .9; }
+    .order-summary-bar strong { font-size: 18px; font-weight: 700; }
+    .stock-badge {
+      font-size: 18px; color: #6b7280; margin-top: 3px;
+    }
+    .stock-badge.low { color: #ef4444; }
+    .stock-badge.ok  { color: #16a34a; }
+    @media (max-width: 640px) {
+      .order-item-row { grid-template-columns: 1fr 1fr; }
+      .order-item-row > *:last-child { grid-column: span 2; justify-self: end; }
+    }
+  </style>
 </head>
 
 <body class="inner-page">
   <div id="header-placeholder"></div>
 
   <main class="add-product-main">
-
-    <button onclick="window.history.back()" class="confirm-btn back-btn">
-      ← Previous
-    </button>
+    <button onclick="window.history.back()" class="confirm-btn back-btn">← Previous</button>
 
     <div class="form-card">
       <h1 class="page-title">Create Logistics Order</h1>
 
       <form id="create-order-form" novalidate>
 
+        <!-- Invoice -->
+        <div class="co-field">
+          <label class="ap-label" for="co-invoice">INVOICE NUMBER <span style="color:#ef4444">*</span></label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="ap-input co-input" type="text" id="co-invoice"
+              placeholder="e.g. LOG-0001" required style="flex:1;text-transform:uppercase;">
+            <button type="button" id="co-gen-invoice" class="pag-btn"
+              style="white-space:nowrap;height:42px;padding:0 14px;">Auto-Generate</button>
+          </div>
+        </div>
+
         <div class="co-section-label">CUSTOMER DETAILS</div>
 
         <div class="co-field">
-          <label class="ap-label" for="co-customer">Customer Name</label>
+          <label class="ap-label" for="co-customer">Customer Name <span style="color:#ef4444">*</span></label>
           <input class="ap-input co-input" type="text" id="co-customer"
-            placeholder="Enter legal identity or individual name" required>
+            placeholder="Enter customer name" required>
         </div>
 
         <div class="co-field">
-          <label class="ap-label" for="co-address">Delivery Address</label>
-          <textarea class="ap-input co-textarea" id="co-address" placeholder="" required></textarea>
+          <label class="ap-label" for="co-address">Delivery Address <span style="color:#ef4444">*</span></label>
+          <textarea class="ap-input co-textarea" id="co-address" placeholder="Full delivery address" required></textarea>
         </div>
 
-        <div class="co-row">
-          <div class="co-col">
-            <label class="ap-label" for="co-product">Grocery Item Selection</label>
-            <select class="ap-input ap-select co-input" id="co-product" required>
-              <option value="" disabled selected>Select inventory category</option>
-              <option>Dairy</option>
-              <option>Produce</option>
-              <option>Bakery</option>
-              <option>Meat</option>
-              <option>Beverage</option>
-              <option>Frozen</option>
-              <option>Other</option>
-            </select>
+        <!-- ── Order Items ─────────────────────────────────────────── -->
+        <div class="order-items-section">
+          <div class="order-items-header">
+            <span class="order-items-title">📦 Order Items</span>
+            <button type="button" class="add-item-btn" id="add-item-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Product
+            </button>
           </div>
-          <div class="co-qty-col">
-            <label class="ap-label" for="co-qty">Quantity</label>
-            <div class="co-qty-wrap">
-              <input class="ap-input co-input co-qty-input" type="number" id="co-qty" value="0" min="0">
-              <span class="co-unit-label">UNITS</span>
-            </div>
+          <div id="order-items-list">
+            <!-- Rows injected by JS -->
+          </div>
+          <div class="order-summary-bar" id="order-summary-bar" style="display:none;">
+            <span>Order Total</span>
+            <strong id="order-total-display">Rs 0.00</strong>
           </div>
         </div>
 
-        <div class="co-field">
+        <div class="co-field" style="margin-top:16px;">
           <label class="ap-label" for="co-status">Delivery Status</label>
           <select class="ap-input ap-select co-input" id="co-status">
             <option>Pending</option>
@@ -68,6 +122,11 @@
             <option>Delivered</option>
             <option>Delayed</option>
           </select>
+        </div>
+
+        <div class="co-field">
+          <label class="ap-label" for="co-notes">Notes (Optional)</label>
+          <textarea class="ap-input co-textarea" id="co-notes" placeholder="Any special delivery instructions..."></textarea>
         </div>
 
         <p id="co-msg" class="form-message" hidden></p>
@@ -89,5 +148,4 @@
   <script src="../js/components.js"></script>
   <script src="../js/create_order.js"></script>
 </body>
-
 </html>
