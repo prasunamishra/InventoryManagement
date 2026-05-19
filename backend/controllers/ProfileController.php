@@ -61,7 +61,7 @@ function updateProfile($data) {
         return ["success" => false, "message" => "Name and username are required.", "_code" => 400];
     }
 
-        // Validate proper email format and ensure it ends with .com
+    // Validate proper email format and ensure it ends with .com
     if ($email) {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ["success" => false, "message" => "Please enter a valid email address.", "_code" => 400];
@@ -70,7 +70,6 @@ function updateProfile($data) {
             return ["success" => false, "message" => "Email must end with .com", "_code" => 400];
         }
     }
-
 
     // check garxa yo username already aru user le use gareko xa ki xaina
     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
