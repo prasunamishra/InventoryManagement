@@ -1,3 +1,3 @@
 window.env = {
-    API_URL: '/inventorymanagement/backend'
+    API_URL: '/groceryflowupdate/backend'
 }
