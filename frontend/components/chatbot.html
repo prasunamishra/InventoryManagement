@@ -1,0 +1,34 @@
+<div id="chatbot-widget" class="chatbot-widget">
+  <button id="chatbot-toggle" class="chatbot-toggle">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+  </button>
+
+  <div id="chatbot-window" class="chatbot-window hidden">
+    <div class="chatbot-header">
+      <div class="chatbot-header-title">
+        <span class="chatbot-ai-icon">🤖</span>
+        <div>
+          <h3>Inventory Assistant</h3>
+          <div class="chatbot-header-subtitle">AI-Powered Stock Management</div>
+        </div>
+      </div>
+      <button id="chatbot-close" class="chatbot-close">&times;</button>
+    </div>
+    
+    <div id="chatbot-messages" class="chatbot-messages">
+      <!-- Messages will be injected here -->
+    </div>
+    
+    <form id="chatbot-form" class="chatbot-input-area">
+      <input type="text" id="chatbot-input" placeholder="Ask about inventory, low stock..." autocomplete="off">
+      <button type="submit" id="chatbot-send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </form>
+  </div>
+</div>
