@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"> <!-- encoding -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- responsive -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Staff Registration</title>
-
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f8fafc; /* background */
+      background-color: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #334155;
     }
-
     .reg-container {
       max-width: 800px;
-      margin: 40px auto; /* center */
+      margin: 40px auto;
       padding: 0 20px;
     }
-
     .back-btn {
       background-color: #1e6b8c;
       color: white;
@@ -33,18 +30,15 @@
       margin-bottom: 24px;
       text-decoration: none;
     }
-
     .back-btn:hover {
-      background-color: #15546e; /* hover */
+      background-color: #15546e;
     }
-
     .page-title {
       font-size: 24px;
       font-weight: 700;
       color: #0f172a;
       margin: 0 0 20px 0;
     }
-
     .reg-card {
       background: white;
       border: 1px solid #e2e8f0;
@@ -52,11 +46,9 @@
       padding: 40px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-
     .reg-field {
-      margin-bottom: 28px; /* spacing */
+      margin-bottom: 28px;
     }
-
     .reg-label {
       display: block;
       font-size: 18px;
@@ -66,7 +58,6 @@
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-
     .reg-input {
       width: 100%;
       border: none;
@@ -78,26 +69,22 @@
       background: transparent;
       transition: border-color 0.2s;
     }
-
     .reg-input::placeholder {
       color: #cbd5e1;
     }
-
     .reg-input:focus {
-      border-bottom-color: #1e6b8c; /* focus */
+      border-bottom-color: #1e6b8c;
     }
     
-    /* role pills */
+    /* Role Pills */
     .role-group {
       display: flex;
       gap: 12px;
       margin-top: 12px;
     }
-
     .role-group input[type="radio"] {
-      display: none; /* hide radio */
+      display: none;
     }
-
     .role-pill {
       background: #f1f5f9;
       color: #64748b;
@@ -108,10 +95,9 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .role-group input[type="radio"]:checked + .role-pill {
       background: #e0f2fe;
-      color: #0284c7; /* selected */
+      color: #0284c7;
     }
     
     .submit-btn {
@@ -126,9 +112,8 @@
       margin-top: 10px;
       transition: background 0.2s;
     }
-
     .submit-btn:hover {
-      background-color: #025687; /* hover */
+      background-color: #025687;
     }
     
     .form-message {
@@ -136,15 +121,13 @@
       border-radius: 4px;
       font-size: 18px;
       margin-bottom: 20px;
-      display: none; /* hidden */
+      display: none;
     }
-
     .form-message.error {
       background-color: #fef2f2;
       color: #ef4444;
       border: 1px solid #fee2e2;
     }
-
     .form-message.success {
       background-color: #f0fdf4;
       color: #22c55e;
@@ -152,63 +135,46 @@
     }
   </style>
 </head>
-
 <body>
 
   <div class="reg-container">
-
-    <!-- back -->
     <a href="staff.html" class="back-btn">&larr; Previous</a>
     
     <h1 class="page-title" id="page-heading">Registration</h1>
     
     <div class="reg-card">
-
-      <!-- form -->
       <form id="staff-form" novalidate>
-        <input type="hidden" id="staff-id"> <!-- hidden id -->
+        <input type="hidden" id="staff-id">
         
-        <!-- name -->
         <div class="reg-field">
           <label class="reg-label" for="staff-name">FULL NAME *</label>
           <input class="reg-input" type="text" id="staff-name" placeholder="e.g. Alexander Pierce" required>
         </div>
         
-        <!-- email -->
         <div class="reg-field">
           <label class="reg-label" for="staff-email">EMAIL ADDRESS *</label>
           <input class="reg-input" type="email" id="staff-email" placeholder="alex@example.com" required>
         </div>
         
-        <!-- username -->
         <div class="reg-field">
           <label class="reg-label" for="staff-username">USERNAME *</label>
           <input class="reg-input" type="text" id="staff-username" placeholder="apierce_ops" required>
         </div>
         
-        <!-- password -->
         <div class="reg-field">
           <label class="reg-label" for="staff-password" id="lbl-password">PASSWORD *</label>
           <input class="reg-input" type="text" id="staff-password" placeholder="********" required>
-          <p style="font-size: 18px; color: #94a3b8; margin-top: 6px;" id="pw-hint">
-            Min 8 chars, Uppercase, Lowercase, Number, Special Char
-          </p>
+          <p style="font-size: 18px; color: #94a3b8; margin-top: 6px;" id="pw-hint">Min 8 chars, Uppercase, Lowercase, Number, Special Char</p>
         </div>
         
-        <!-- phone -->
         <div class="reg-field">
-          <label class="reg-label" for="staff-phone">PHONE NO.</label>
-          <input class="reg-input" type="text" id="staff-phone" placeholder="10-digit number">
+          <label class="reg-label" for="staff-phone">PHONE NO. *</label>
+          <input class="reg-input" type="text" id="staff-phone" placeholder="10-digit number" required>
         </div>
         
-        <!-- role -->
         <div class="reg-field">
           <label class="reg-label">ROLE *</label>
           <div class="role-group">
-
-            <input type="radio" id="role-admin" name="job_role" value="Admin">
-            <label for="role-admin" class="role-pill">Admin</label>
-
             <input type="radio" id="role-staff" name="job_role" value="Staff" checked>
             <label for="role-staff" class="role-pill">Staff</label>
             
@@ -217,17 +183,15 @@
           </div>
         </div>
         
-        <div id="form-msg" class="form-message"></div> <!-- message -->
+        <div id="form-msg" class="form-message"></div>
         
-        <!-- submit -->
         <button type="submit" class="submit-btn" id="submit-btn">Add Staff</button>
       </form>
     </div>
   </div>
 
-  <!-- scripts -->
   <script src="../js/env.js"></script>
   <script src="../js/api.js"></script>
-  <script src="../js/add_staff.js"></script>
+  <script src="../js/add_staff.js?v=2"></script>
 </body>
 </html>

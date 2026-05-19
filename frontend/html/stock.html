@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Ledger – GroceryFlow</title>
+  <meta name="description" content="GroceryFlow – Real-time stock tracking. Stock = Total IN − Total OUT">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+
+    .stock-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stock-stat-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .07);
+      border-left: 4px solid #e5e7eb;
+    }
+
+    .stock-stat-card.in {
+      border-left-color: #16a34a;
+    }
+
+    .stock-stat-card.out {
+      border-left-color: #ef4444;
+    }
+
+    .stock-stat-card.bal {
+      border-left-color: #2563eb;
+    }
+
+    .stock-stat-card.low {
+      border-left-color: #f59e0b;
+    }
+
+    .stock-stat-label {
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6b7280;
+      margin-bottom: 5px;
+    }
+
+    .stock-stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .stock-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+
+    .stock-tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      transition: all .2s;
+    }
+
+    .stock-tab.active {
+      background: #1d4ed8;
+      color: #fff;
+      border-color: #1d4ed8;
+    }
+
+    .stock-tab:hover:not(.active) {
+      background: #f3f4f6;
+    }
+
+    .prod-table th.in-col { color: #16a34a; }
+    .prod-table th.out-col { color: #ef4444; }
+    .prod-table th.cur-col { color: #1d4ed8; }
+    .prod-table tr:hover td { background: #fafafa; }
+
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .type-badge.IN {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .type-badge.OUT {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .stock-level.low {
+      color: #ef4444;
+    }
+
+    .stock-level.ok {
+      color: #16a34a;
+    }
+
+    .stock-level.warn {
+      color: #f59e0b;
+    }
+
+  </style>
+</head>
+
+<body class="inner-page">
+  <div id="header-placeholder"></div>
+
+  <main class="inner-main">
+    <button onclick="window.history.back()" class="confirm-btn back-btn">← Previous</button>
+
+
+    <div class="page-header-row" style="margin-bottom:18px;">
+      <h1 class="page-title" style="margin:0;">Stock Management</h1>
+    </div>
+
+    <!-- Stats -->
+    <div class="stock-stats-grid">
+      <div class="stock-stat-card in">
+        <div class="stock-stat-label">Total Units IN</div>
+        <div class="stock-stat-value" id="stat-total-in">—</div>
+      </div>
+      <div class="stock-stat-card out">
+        <div class="stock-stat-label">Total Units OUT</div>
+        <div class="stock-stat-value" id="stat-total-out">—</div>
+      </div>
+      <div class="stock-stat-card bal">
+        <div class="stock-stat-label">Products Tracked</div>
+        <div class="stock-stat-value" id="stat-products">—</div>
+      </div>
+      <div class="stock-stat-card low">
+        <div class="stock-stat-label">Low Stock (&lt;10)</div>
+        <div class="stock-stat-value" style="color:#f59e0b;" id="stat-low">—</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="stock-tabs">
+      <button class="stock-tab active" data-tab="current" id="tab-current">
+        📦 Current Stock (Aggregated)
+      </button>
+      <button class="stock-tab" data-tab="ledger" id="tab-ledger">
+        📋 Movement Log (All Entries)
+      </button>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar" style="margin-bottom:14px;">
+      <div class="filter-search-wrap" style="flex:2;">
+        <svg class="filter-search-icon" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input type="text" id="stock-search" class="filter-search-input" placeholder="Search product name or SKU…">
+      </div>
+      <select id="stock-type-filter" class="filter-select" style="display:none;">
+        <option value="">All Types</option>
+        <option value="IN">Stock IN (Purchases)</option>
+        <option value="OUT">Stock OUT (Sales/Returns)</option>
+      </select>
+      <select id="stock-cat-filter" class="filter-select">
+        <option value="">All Categories</option>
+        <option>Dairy</option>
+        <option>Bakery</option>
+        <option>Meat</option>
+        <option>Frozen</option>
+        <option>Dry Goods</option>
+        <option>Beverages</option>
+        <option>Snacks</option>
+        <option>Household</option>
+        <option>Other</option>
+      </select>
+      <button type="button" id="stock-filter-reset" class="filter-reset-btn">&#8635; Reset</button>
+    </div>
+
+    <!-- Active/Inactive Toggle -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+      <label style="font-size: 18px;color:#4b5563;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="show-inactive-toggle">
+        Show Inactive Items
+      </label>
+    </div>
+
+    <!-- Current Stock (aggregated) -->
+    <div id="panel-current" class="prod-table-wrap" style="overflow-x: auto;">
+      <table class="prod-table">
+        <thead>
+          <tr>
+            <th>Product / SKU</th>
+            <th>Category</th>
+            <th class="in-col">↑ Total IN</th>
+            <th class="out-col">↓ Total OUT</th>
+            <th class="cur-col">= Current Stock</th>
+            <th>Price</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="current-stock-tbody">
+          <tr>
+            <td colspan="6" class="no-data">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Movement Log (individual ledger entries) -->
+    <div id="panel-ledger" class="prod-table-wrap" style="display:none; overflow-x: auto;">
+      <table class="prod-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>Reference</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="ledger-tbody">
+          <tr>
+            <td colspan="6" class="no-data">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- STATUS CONFIRMATION Modal -->
+  <div class="modal-overlay" id="status-modal" style="display:none; z-index: 9999;">
+    <div class="modal-box modal-box-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirm Status Change</h3>
+        <button class="modal-close" onclick="closeModal('status-modal')">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <p id="status-confirm-msg" style="font-size: 18px; margin-bottom: 20px;">Are you sure you want to mark this item
+          as Inactive? It will be hidden from inventory.</p>
+        <div class="modal-footer">
+          <button type="button" class="pag-btn" onclick="closeModal('status-modal')">Cancel</button>
+          <button type="button" class="confirm-btn" id="confirm-status-btn" style="background: #ef4444;">Yes,
+            Proceed</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="footer-placeholder"></div>
+  <script src="../js/env.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/components.js"></script>
+
+  <script src="../js/stock.js"></script>
+</body>
+
+</html>
