@@ -3,14 +3,15 @@
  */
 
 let allSuppliers = [];
-let filteredSuppliers = [];
-let supplierToDeleteId = null;
+let showInactive = true;
+let statusTargetId = null;
+let statusTargetStatus = null;
+let statusTargetName = '';
 
 async function fetchSuppliers() {
   const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`);
   if (data && data.success !== false) {
     allSuppliers = data.suppliers || [];
-    filteredSuppliers = [...allSuppliers];
     renderTable();
   } else {
     const tbody = document.getElementById('supplier-tbody');
@@ -26,8 +27,16 @@ function renderTable() {
   const tpl = document.getElementById('supplier-row-tpl');
 
   tbody.replaceChildren();
+  
+  const displayList = allSuppliers.filter(s => {
+    if (!showInactive && s.status === 'inactive') return false;
+    const q = (document.getElementById('sup-search')?.value || '').toLowerCase();
+    return s.name.toLowerCase().includes(q) ||
+           (s.phone && s.phone.toLowerCase().includes(q)) ||
+           (s.email && s.email.toLowerCase().includes(q));
+  });
 
-  if (filteredSuppliers.length === 0) {
+  if (displayList.length === 0) {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td colspan="5" class="no-data">No suppliers found.</td>`;
     tbody.appendChild(tr);
@@ -43,7 +52,7 @@ function renderTable() {
       addBtn.style.display = hasAccess ? 'inline-block' : 'none';
   }
 
-  filteredSuppliers.forEach(s => {
+  displayList.forEach(s => {
     const clone = tpl.content.cloneNode(true);
 
     clone.querySelector('[data-sup-name]').textContent = s.name;
@@ -54,12 +63,21 @@ function renderTable() {
       : '—';
 
     const editBtn = clone.querySelector('[data-edit-btn]');
-    const delBtn = clone.querySelector('[data-del-btn]');
+    const statusBtn = clone.querySelector('[data-status-btn]');
+    const isInactive = s.status === 'inactive';
+    
+    if (isInactive) {
+      clone.children[0].style.opacity = '0.6';
+      clone.children[0].style.background = '#f3f4f6';
+    }
 
     if (hasAccess) {
-      delBtn.addEventListener('click', () => {
-        supplierToDeleteId = s.id;
-        openModal('sup-delete-modal');
+      statusBtn.textContent = isInactive ? 'Activate' : 'Deactivate';
+      statusBtn.style.background = isInactive ? '#10b981' : '#fee2e2';
+      statusBtn.style.color = isInactive ? 'white' : '#dc2626';
+      
+      statusBtn.addEventListener('click', () => {
+        openStatusModal(s.id, s.name, s.status);
       });
       editBtn.addEventListener('click', () => {
         document.getElementById('edit-sup-id').value = s.id;
@@ -70,7 +88,7 @@ function renderTable() {
         openModal('edit-modal');
       });
     } else {
-      delBtn.style.display = 'none';
+      statusBtn.style.display = 'none';
       if (editBtn) editBtn.style.display = 'none';
     }
 
@@ -78,26 +96,47 @@ function renderTable() {
   });
 }
 
-document.getElementById('sup-confirm-delete-btn').addEventListener('click', async function () {
-  if (!supplierToDeleteId) return;
+function openStatusModal(id, name, currentStatus) {
+  statusTargetId = id;
+  statusTargetName = name;
+  statusTargetStatus = currentStatus === 'inactive' ? 'active' : 'inactive';
+  
+  const msgEl = document.getElementById('status-confirm-msg');
+  const btnEl = document.getElementById('confirm-status-btn');
+  
+  if (statusTargetStatus === 'inactive') {
+    msgEl.textContent = `Deactivate "${name}"? They will be hidden from new purchase orders.`;
+    btnEl.textContent = 'Yes, Deactivate';
+    btnEl.style.background = '#ef4444';
+  } else {
+    msgEl.textContent = `Activate "${name}"?`;
+    btnEl.textContent = 'Yes, Activate';
+    btnEl.style.background = '#10b981';
+  }
+  
+  openModal('status-modal');
+}
+
+document.getElementById('confirm-status-btn')?.addEventListener('click', async function () {
+  if (!statusTargetId) return;
   const btn = this;
-  btn.disabled = true; btn.textContent = 'DELETING...';
+  btn.disabled = true; btn.textContent = 'UPDATING...';
 
   const data = await apiCall(`${window.env.API_URL}/api/suppliers.php`, {
-    method: 'DELETE',
-    body: { id: supplierToDeleteId }
+    method: 'POST',
+    body: { action: 'update_status', id: statusTargetId, status: statusTargetStatus }
   });
 
   if (data.success) {
     await fetchSuppliers();
-    closeModal('sup-delete-modal');
-    showToast('Supplier deleted successfully.');
+    closeModal('status-modal');
+    showToast('Supplier status updated.');
   } else {
-    alert(data.message || 'Error deleting supplier.');
+    alert(data.message || 'Error updating status.');
   }
 
-  btn.disabled = false; btn.textContent = 'DELETE';
-  supplierToDeleteId = null;
+  btn.disabled = false;
+  statusTargetId = null;
 });
 
 document.getElementById('edit-supplier-form').addEventListener('submit', async function (e) {
@@ -159,15 +198,9 @@ document.getElementById('edit-supplier-form').addEventListener('submit', async f
   btn.disabled = false; btn.textContent = 'Save Changes';
 });
 
-document.getElementById('sup-search').addEventListener('input', function () {
-  const q = this.value.trim().toLowerCase();
-  filteredSuppliers = q
-    ? allSuppliers.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      (s.phone && s.phone.toLowerCase().includes(q)) ||
-      (s.email && s.email.toLowerCase().includes(q))
-    )
-    : [...allSuppliers];
+document.getElementById('sup-search').addEventListener('input', renderTable);
+document.getElementById('show-inactive-toggle')?.addEventListener('change', function(e) {
+  showInactive = e.target.checked;
   renderTable();
 });
 
