@@ -223,13 +223,17 @@ document.getElementById('pr-form').addEventListener('submit', async function (e)
 
   if (data.success) {
     closeModal('pr-modal');
-    showToast('Purchase return recorded successfully. Stock has been updated.', 'success');
-    // Update local stock map
-    if (item in _stockMap) _stockMap[item] = Math.max(0, _stockMap[item] - qty);
+    if (data.pending) {
+      showToast(data.message || 'Purchase return submitted for approval.', 'info');
+    } else {
+      showToast('Purchase return recorded successfully. Stock has been updated.', 'success');
+      // Update local stock map
+      if (item in _stockMap) _stockMap[item] = Math.max(0, _stockMap[item] - qty);
+      await fetchReturns();
+    }
     this.reset();
     document.getElementById('pr-item').replaceChildren();
     document.getElementById('pr-stock-info').textContent = '';
-    await fetchReturns();
     await fetchNextInvoice(); // pre-load next invoice for next time
   } else if (data.message && data.message.toLowerCase().includes('invoice')) {
     showAlertPopup('Invoice Error', data.message);

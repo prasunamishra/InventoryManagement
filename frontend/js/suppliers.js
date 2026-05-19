@@ -37,6 +37,11 @@ function renderTable() {
   const role = (sessionStorage.getItem('gf_role') || 'staff').toLowerCase();
   const jobRole = sessionStorage.getItem('gf_job_role') || '';
   const hasAccess = role === 'admin' || jobRole === 'Supervisor';
+  
+  const addBtn = document.getElementById('add-sup-btn');
+  if (addBtn) {
+      addBtn.style.display = hasAccess ? 'inline-block' : 'none';
+  }
 
   filteredSuppliers.forEach(s => {
     const clone = tpl.content.cloneNode(true);
@@ -142,6 +147,9 @@ document.getElementById('edit-supplier-form').addEventListener('submit', async f
       closeModal('edit-modal');
       msg.style.display = 'none';
     }, 1200);
+  } else if (res.message && res.message.toLowerCase().includes('already exists')) {
+    // Duplicate — show styled popup
+    showAlertPopup('Duplicate Supplier', 'Supplier already exists. Duplicate entries are not allowed.');
   } else {
     msg.textContent = res.message || 'Error updating supplier.';
     msg.className = 'form-message error';

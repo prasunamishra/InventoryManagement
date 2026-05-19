@@ -30,14 +30,32 @@
       <div class="active-deliv-value" id="active-deliv-count">0</div>
     </div>
 
+    <!-- Search & Filter Bar -->
+    <div class="filter-bar" id="logi-filter-bar">
+      <div class="filter-search-wrap">
+        <svg class="filter-search-icon" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="logi-search" class="filter-search-input" placeholder="Search by customer, product, invoice…">
+      </div>
+      <select id="logi-filter-status" class="filter-select">
+        <option value="">All Statuses</option>
+        <option>Pending</option>
+        <option>In Transit</option>
+        <option>Shipped</option>
+        <option>Delivered</option>
+        <option>Delayed</option>
+      </select>
+      <button type="button" id="logi-filter-reset" class="filter-reset-btn">&#8635; Reset</button>
+    </div>
+
     <!-- Table Section -->
     <div class="prod-table-wrap">
       <table class="prod-table" id="logistics-table">
         <thead>
           <tr>
+            <th>Invoice #</th>
             <th>Customer Name</th>
             <th>Address</th>
-            <th>Product</th>
+            <th>Products (Items)</th>
             <th>Delivery Status</th>
           </tr>
         </thead>
@@ -50,6 +68,7 @@
     <!-- Row template -->
     <template id="logistics-row-tpl">
       <tr>
+        <td data-logi-invoice style="font-size: 18px;color:#6b7280;font-family:monospace;"></td>
         <td data-logi-customer></td>
         <td data-logi-address></td>
         <td>
@@ -58,7 +77,7 @@
         <td>
           <div class="status-pill-wrap" data-logi-status-wrap>
             <span class="status-dot"></span>
-            <select data-logi-status-select style="background: transparent; border: none; font-weight: 700; font-size: 12px; outline: none; color: inherit; cursor: pointer; box-shadow: none;">
+            <select data-logi-status-select style="background: transparent; border: none; font-weight: 700; font-size: 18px; outline: none; color: inherit; cursor: pointer; box-shadow: none;">
               <option value="Pending">Pending</option>
               <option value="In Transit">In Transit</option>
               <option value="Shipped">Shipped</option>
@@ -70,48 +89,7 @@
       </tr>
     </template>
 
-    <!-- ADD ORDER MODAL -->
-    <div class="modal-overlay" id="add-order-modal" style="display:none;">
-      <div class="modal-box">
-        <div class="modal-header">
-          <h3 class="modal-title">Create Order</h3>
-          <button class="modal-close" onclick="closeModal('add-order-modal')">&#10005;</button>
-        </div>
-        <div class="modal-body">
-          <form id="logisticsForm">
-            <div class="form-row">
-              <div class="form-col">
-                <label class="ap-label" for="log-customer">CUSTOMER</label>
-                <input class="ap-input" type="text" id="log-customer" placeholder="Customer name" required>
-              </div>
-              <div class="form-col">
-                <label class="ap-label" for="log-address">ADDRESS</label>
-                <input class="ap-input" type="text" id="log-address" placeholder="Delivery address" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-col">
-                <label class="ap-label" for="log-product">PRODUCT</label>
-                <input class="ap-input" type="text" id="log-product" placeholder="e.g. Whole Milk x2" required>
-              </div>
-              <div class="form-col">
-                <label class="ap-label" for="log-status">STATUS</label>
-                <select class="ap-input ap-select" id="log-status">
-                  <option>Pending</option>
-                  <option>In Transit</option>
-                  <option>Shipped</option>
-                  <option>Delivered</option>
-                  <option>Delayed</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="confirm-btn">ADD ORDER</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <!-- Orders are created via create_order.html (multi-product) -->
 
   </main>
 
